@@ -16,7 +16,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
 
-# Hugging Face image classification model
 DISEASE_MODEL = (
     "https://router.huggingface.co/hf-inference/models/"
     "linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification"
@@ -24,6 +23,8 @@ DISEASE_MODEL = (
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
+
+# ---------------- COMMON HELPERS ----------------
 
 def allowed_file(filename):
     return (
@@ -87,11 +88,12 @@ def disease_advice(label):
                 "Continue regular crop monitoring."
             ),
             "fertilizer": (
-                "Use fertilizer based on soil testing and "
-                "the crop's growth stage."
+                "Use fertilizer according to soil testing "
+                "and the crop's growth stage."
             ),
             "quantity": (
-                "No quantity can be recommended from this image alone."
+                "A fertilizer quantity cannot be recommended "
+                "from this image alone."
             ),
             "prevention": (
                 "Use healthy planting material, maintain field hygiene, "
@@ -102,7 +104,7 @@ def disease_advice(label):
     return {
         "treatment": (
             "This is an AI prediction, not a confirmed diagnosis. "
-            "Check the symptoms with a local agricultural officer "
+            "Check symptoms with a local agricultural officer "
             "before selecting a treatment."
         ),
         "fertilizer": (
@@ -113,9 +115,8 @@ def disease_advice(label):
             "A safe quantity cannot be determined from the image alone."
         ),
         "prevention": (
-            "Monitor the crop, remove severely affected plant material "
-            "where appropriate, avoid unnecessary leaf wetness, "
-            "and seek local agricultural advice."
+            "Monitor the crop, maintain field hygiene, and seek "
+            "local agricultural advice."
         )
     }
 
@@ -238,7 +239,7 @@ def crop_recommendation():
     )
 
 
-# ---------------- FARMING CHATBOT ----------------
+# ---------------- CHATBOT ----------------
 
 @app.route("/chatbot")
 def chatbot():
@@ -247,16 +248,75 @@ def chatbot():
 
 # ---------------- CROP CALENDAR ----------------
 
-@app.route("/crop-calendar")
+@app.route("/crop-calendar", methods=["GET", "POST"])
 def crop_calendar():
-    return render_template("calendar.html")
+    calendar = None
+    message = None
+
+    if request.method == "POST":
+        crop = request.form.get("crop", "").strip()
+        season = request.form.get("season", "").strip()
+        district = request.form.get("district", "").strip()
+
+        if not crop or not season or not district:
+            message = "Please enter the crop, season and district."
+        else:
+            calendar = [
+                {
+                    "stage": "Land preparation",
+                    "details": (
+                        "Prepare the field and check soil condition "
+                        "before planting."
+                    )
+                },
+                {
+                    "stage": "Sowing or planting",
+                    "details": (
+                        "Use suitable seeds and follow local "
+                        "agricultural recommendations."
+                    )
+                },
+                {
+                    "stage": "Crop growth",
+                    "details": (
+                        "Monitor water, weeds, pests and crop health."
+                    )
+                },
+                {
+                    "stage": "Harvest",
+                    "details": (
+                        "Harvest when the crop reaches the appropriate "
+                        "maturity stage."
+                    )
+                }
+            ]
+
+            message = (
+                f"General calendar for {crop} in {district}, "
+                f"season: {season}. This is not a date-specific forecast."
+            )
+
+    return render_template(
+        "calendar.html",
+        calendar=calendar,
+        message=message
+    )
 
 
 # ---------------- MARKET PRICES ----------------
 
 @app.route("/market-prices", methods=["GET", "POST"])
 def market_prices():
-    return render_template("market_prices.html")
+    error = (
+        "Live market prices are not connected yet. "
+        "Please check an official agricultural market source."
+    )
+
+    return render_template(
+        "market_prices.html",
+        error=error,
+        prices=None
+    )
 
 
 # ---------------- CROP DISEASE DOCTOR ----------------
@@ -291,6 +351,8 @@ def predict():
             error="Invalid filename. Please select another image."
         )
 
+    # Use a unique filename to avoid collisions between uploads.
+    filename = f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{filename}"
     image_path = os.path.join(UPLOAD_FOLDER, filename)
 
     try:
@@ -306,10 +368,7 @@ def predict():
             )
 
         label = result.get("label", "Unknown")
-        confidence = round(
-            float(result.get("score", 0)) * 100, 2
-        )
-
+        confidence = round(float(result.get("score", 0)) * 100, 2)
         advice = disease_advice(label)
 
         return render_template(
@@ -354,12 +413,11 @@ def pest_identify():
             error="Please upload a JPG, JPEG, PNG, or WEBP image."
         )
 
-    # Pest AI is not connected in this version.
     return render_template(
         "pest_doctor.html",
         error=(
-            "Photo uploaded, but pest AI detection is not connected yet. "
-            "Please consult an agricultural officer for identification."
+            "The photo was uploaded, but AI pest detection is not "
+            "connected yet. Please consult an agricultural officer."
         )
     )
 
@@ -375,14 +433,59 @@ def soil_doctor():
 def soil_detect():
     return render_template(
         "soil_doctor.html",
-        error="Soil image analysis is not connected in this version."
+        error=(
+            "Soil image analysis is not connected yet. "
+            "Please use a soil test for reliable results."
+        )
     )
 
 
 # ---------------- PROFIT CALCULATOR ----------------
 
-@app.route("/profit-calculator")
+@app.route("/profit-calculator", methods=["GET", "POST"])
 def profit_calculator():
+    if request.method == "POST":
+        try:
+            crop = request.form.get("crop", "").strip()
+            area = float(request.form.get("area", 0))
+            investment = float(request.form.get("investment", 0))
+            yield_amount = float(request.form.get("yield_amount", 0))
+            sale_price = float(request.form.get("sale_price", 0))
+
+            if not crop:
+                raise ValueError("Please select a crop.")
+
+            if (
+                area <= 0
+                or investment < 0
+                or yield_amount < 0
+                or sale_price < 0
+            ):
+                raise ValueError("Please enter valid non-negative values.")
+
+            revenue = yield_amount * sale_price
+            total_cost = investment
+            profit = revenue - total_cost
+
+            return render_template(
+                "profit_calculator.html",
+                crop=crop,
+                area=area,
+                yield_amount=yield_amount,
+                revenue=revenue,
+                total_cost=total_cost,
+                profit=profit
+            )
+
+        except (ValueError, TypeError):
+            return render_template(
+                "profit_calculator.html",
+                error=(
+                    "Enter a crop, a positive cultivated area, "
+                    "and valid non-negative expense, yield and price values."
+                )
+            )
+
     return render_template("profit_calculator.html")
 
 
@@ -390,14 +493,87 @@ def profit_calculator():
 
 @app.route("/voice-assistant")
 def voice_assistant():
-    return render_template("voice_assistant.html")
+    try:
+        return render_template("voice_assistant.html")
+    except Exception:
+        return (
+            "Voice Assistant page is not available yet. "
+            "Create templates/voice_assistant.html first.",
+            404
+        )
 
 
 # ---------------- GOVERNMENT SCHEMES ----------------
 
-@app.route("/government-schemes")
+@app.route("/government-schemes", methods=["GET", "POST"])
 def government_schemes():
-    return render_template("government_schemes.html")
+    state = request.values.get("state", "Andhra Pradesh").strip()
+    category = request.values.get("category", "all").strip().lower()
+
+    all_schemes = [
+        {
+            "name": "PM-KISAN",
+            "category": "financial",
+            "description": (
+                "A central government income-support scheme for "
+                "eligible landholding farmer families, subject to rules."
+            ),
+            "eligibility": (
+                "Eligibility and exclusions are determined by official "
+                "scheme guidelines."
+            ),
+            "benefit": (
+                "Financial assistance under the current scheme rules."
+            ),
+            "url": "https://pmkisan.gov.in/"
+        },
+        {
+            "name": "Pradhan Mantri Fasal Bima Yojana",
+            "category": "insurance",
+            "description": (
+                "Crop insurance support for eligible notified crops "
+                "and areas, subject to enrolment and scheme rules."
+            ),
+            "eligibility": (
+                "Check current season, crop, area and enrolment rules."
+            ),
+            "benefit": (
+                "Insurance protection against covered crop losses."
+            ),
+            "url": "https://pmfby.gov.in/"
+        },
+        {
+            "name": "Soil Health Card",
+            "category": "soil",
+            "description": (
+                "Helps farmers understand soil nutrient status and "
+                "receive soil-management recommendations."
+            ),
+            "eligibility": (
+                "Contact the local agriculture department for available "
+                "soil testing services."
+            ),
+            "benefit": (
+                "Soil test information to support fertilizer decisions."
+            ),
+            "url": "https://soilhealth.dac.gov.in/"
+        }
+    ]
+
+    if category == "all":
+        schemes = all_schemes
+    else:
+        schemes = [
+            scheme for scheme in all_schemes
+            if scheme["category"] == category
+        ]
+
+    return render_template(
+        "government_schemes.html",
+        state=state,
+        category=category,
+        schemes=schemes
+    )
 
 
 # ---------------- FARMING VIDEOS ----------------
@@ -428,6 +604,17 @@ def file_too_large(error):
     )
 
 
+# ---------------- GENERAL ERROR HANDLER ----------------
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    app.logger.exception("Internal server error")
+    return (
+        "Something went wrong on the server. Please try again later.",
+        500
+    )
+
+
 # ---------------- RUN APPLICATION ----------------
 
 if __name__ == "__main__":
@@ -435,4 +622,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000)),
         debug=False
-    )
+                    )
