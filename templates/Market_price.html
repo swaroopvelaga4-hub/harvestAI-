@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Market Prices</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #183b24;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .icon {
+            font-size: 55px;
+        }
+
+        h1 {
+            color: #078c36;
+            font-size: 27px;
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            color: #607567;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #c8ddcd;
+            border-radius: 10px;
+            background: white;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #078c36;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #056b29;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 18px;
+            background: #effaf0;
+            border: 1px solid #c8e8ce;
+            border-radius: 12px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .result h2 {
+            margin-top: 0;
+            color: #078c36;
+            font-size: 21px;
+        }
+
+        .price-card {
+            margin-top: 12px;
+            padding: 14px;
+            background: white;
+            border: 1px solid #d8e8db;
+            border-radius: 10px;
+        }
+
+        .price {
+            color: #078c36;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .notice {
+            margin-top: 18px;
+            padding: 13px;
+            background: #fff8e6;
+            border-left: 4px solid #e4ad24;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .back {
+            display: block;
+            margin-top: 22px;
+            text-align: center;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #718176;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 8px auto;
+                padding: 19px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">💰</div>
+        <h1>Live Crop Market Prices</h1>
+        <p class="subtitle">
+            Select a crop and location to check market-price information
+            returned by HarvestAI.
+        </p>
+    </div>
+
+    <form
+        action="{{ url_for('market_prices') }}"
+        method="POST"
+        id="marketForm"
+    >
+
+        <label for="crop">🌾 Select Crop</label>
+
+        <select id="crop" name="crop" required>
+            <option value="">-- Choose Crop --</option>
+
+            {% set crops = [
+                'Paddy', 'Rice', 'Maize', 'Cotton',
+                'Chilli', 'Groundnut', 'Turmeric',
+                'Red Gram', 'Green Gram', 'Black Gram',
+                'Soybean', 'Sugarcane', 'Mango',
+                'Tomato', 'Onion', 'Potato'
+            ] %}
+
+            {% for item in crops %}
+            <option value="{{ item }}"
+                {% if request.form.get('crop') == item %}selected{% endif %}>
+                {{ item }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="state">📍 State</label>
+
+        <select id="state" name="state" required>
+            <option value="">-- Choose State --</option>
+
+            {% set states = [
+                'Andhra Pradesh', 'Telangana', 'Tamil Nadu',
+                'Karnataka', 'Kerala', 'Maharashtra',
+                'Odisha', 'Chhattisgarh', 'Madhya Pradesh',
+                'Uttar Pradesh', 'Gujarat', 'Rajasthan',
+                'Punjab', 'Haryana', 'West Bengal',
+                'Bihar', 'Jharkhand', 'Assam'
+            ] %}
+
+            {% for item in states %}
+            <option value="{{ item }}"
+                {% if request.form.get('state') == item %}selected{% endif %}>
+                {{ item }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="district">🏡 District</label>
+
+        <input
+            type="text"
+            id="district"
+            name="district"
+            placeholder="Example: East Godavari"
+            value="{{ request.form.get('district', '') }}"
+            required
+        >
+
+        <label for="market">🏪 Market / Mandi (Optional)</label>
+
+        <input
+            type="text"
+            id="market"
+            name="market"
+            placeholder="Enter market name if known"
+            value="{{ request.form.get('market', '') }}"
+        >
+
+        <button type="submit" id="searchButton">
+            🔍 Check Market Prices
+        </button>
+
+    </form>
+
+    {% if error %}
+    <div class="result">
+        <h2>⚠️ Unable to Get Prices</h2>
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if message %}
+    <div class="result">
+        <h2>📊 Market Price Information</h2>
+        <p>{{ message }}</p>
+    </div>
+    {% endif %}
+
+    {% if prices %}
+    <div class="result">
+        <h2>🌾 Market Price Results</h2>
+
+        {% for item in prices %}
+        <div class="price-card">
+
+            {% if item.crop %}
+            <p><strong>Crop:</strong> {{ item.crop }}</p>
+            {% endif %}
+
+            {% if item.market %}
+            <p><strong>Market:</strong> {{ item.market }}</p>
+            {% endif %}
+
+            {% if item.min_price is defined %}
+            <p>
+                <strong>Minimum Price:</strong>
+                ₹{{ item.min_price }}
+            </p>
+            {% endif %}
+
+            {% if item.max_price is defined %}
+            <p>
+                <strong>Maximum Price:</strong>
+                ₹{{ item.max_price }}
+            </p>
+            {% endif %}
+
+            {% if item.modal_price is defined %}
+            <p class="price">
+                Modal Price: ₹{{ item.modal_price }}
+            </p>
+            {% endif %}
+
+            {% if item.unit %}
+            <p><strong>Unit:</strong> {{ item.unit }}</p>
+            {% endif %}
+
+            {% if item.date %}
+            <p><strong>Date:</strong> {{ item.date }}</p>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="notice">
+        <strong>Important:</strong>
+        Current market prices are not displayed unless a verified
+        market-data source is connected to the backend.
+        Always confirm today's price, quality requirements and market
+        charges with the relevant mandi before selling your crop.
+        Prices may vary by crop quality and market.
+    </div>
+
+    <a class="back" href="{{ url_for('home') }}">
+        ← Back to Home
+    </a>
+
+    <footer>
+        HarvestAI — Smart Farming Assistant 🌱
+    </footer>
+
+</div>
+
+<script>
+    document.getElementById("marketForm").addEventListener("submit", function () {
+        const crop = document.getElementById("crop").value;
+        const state = document.getElementById("state").value;
+        const district = document.getElementById("district").value.trim();
+
+        if (!crop || !state || !district) {
+            alert("Please select a crop, state and district.");
+            return;
+        }
+
+        const button = document.getElementById("searchButton");
+        button.disabled = true;
+        button.textContent = "Searching...";
+    });
+</script>
+
+</body>
+</html>
