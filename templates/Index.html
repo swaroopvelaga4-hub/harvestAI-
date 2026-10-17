@@ -1,0 +1,582 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarvestAI - AI Farming Assistant</title>
+    <style>
+        :root {
+            --green: #078c36;
+            --dark-green: #064d31;
+            --light-green: #eaf8e9;
+            --text: #153b35;
+            --white: #ffffff;
+        }    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--text);
+        background: #f8fbf8;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .navbar {
+        min-height: 78px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 12px 24px;
+        box-shadow: 0 2px 12px #153b3510;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .brand-icon {
+        font-size: 42px;
+    }
+
+    .brand h1 {
+        color: var(--green);
+        margin: 0;
+        font-size: 27px;
+    }
+
+    .brand p {
+        margin: 2px 0 0;
+        font-size: 12px;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .nav-links a {
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .nav-links a:hover {
+        background: var(--light-green);
+        color: var(--green);
+    }
+
+    .location {
+        padding: 11px;
+        background: #f2faf3;
+        border-radius: 12px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .login {
+        background: var(--green);
+        color: white;
+        padding: 12px 18px;
+        border-radius: 25px;
+        white-space: nowrap;
+    }
+
+    .hero {
+        min-height: 275px;
+        padding: 40px 5%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        background:
+            linear-gradient(90deg, #e6f8dff5 0%, #f0fbe7e8 48%, #d4efc4a8 100%);
+        overflow: hidden;
+    }
+
+    .hero-content {
+        max-width: 720px;
+    }
+
+    .hero h2 {
+        font-size: clamp(30px, 4vw, 47px);
+        margin: 0 0 10px;
+        color: var(--green);
+    }
+
+    .hero h3 {
+        font-size: clamp(22px, 3vw, 34px);
+        margin: 0 0 12px;
+        color: var(--dark-green);
+    }
+
+    .hero p {
+        font-size: 18px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .hero-message {
+        max-width: 220px;
+        font-size: 24px;
+        font-weight: bold;
+        font-style: italic;
+        color: var(--dark-green);
+        line-height: 1.5;
+    }
+
+    .benefits {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .benefits span {
+        padding: 10px 14px;
+        background: #ffffffd9;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    main {
+        padding: 24px 28px;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .section-title .emoji {
+        font-size: 29px;
+    }
+
+    .section-title h2 {
+        margin: 0;
+        font-size: 23px;
+    }
+
+    .section-title p {
+        margin: 5px 0 0;
+        font-size: 13px;
+        color: #55716a;
+    }
+
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .card {
+        min-width: 0;
+        min-height: 128px;
+        padding: 16px;
+        border: 1px solid #dcebe1;
+        border-radius: 14px;
+        background: white;
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px #064d3112;
+    }
+
+    .card-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--card-color, #078c36);
+        color: white;
+        font-size: 25px;
+    }
+
+    .card h3 {
+        margin: 0;
+        font-size: 15px;
+    }
+
+    .card p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #405f59;
+    }
+
+    .card-arrow {
+        display: block;
+        text-align: right;
+        margin-top: 6px;
+        color: var(--card-color, #078c36);
+        font-size: 20px;
+    }
+
+    .blue { --card-color: #2587e9; background: #f0f7ff; }
+    .teal { --card-color: #079b92; background: #effbf9; }
+    .green { --card-color: #22a447; background: #f1fbf0; }
+    .mint { --card-color: #119d69; background: #effbf5; }
+    .yellow { --card-color: #e8a900; background: #fffaf0; }
+    .brown { --card-color: #98601e; background: #faf6f0; }
+    .red { --card-color: #e63d55; background: #fff3f4; }
+    .purple { --card-color: #5545d8; background: #f6f3ff; }
+    .violet { --card-color: #a72dc0; background: #fcf3ff; }
+    .pink { --card-color: #e83f7b; background: #fff3f7; }
+    .orange { --card-color: #ef792f; background: #fff6ef; }
+
+    .additional {
+        margin-top: 24px;
+    }
+
+    .additional-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    footer {
+        background: var(--dark-green);
+        color: white;
+        padding: 22px;
+        text-align: center;
+        font-size: 13px;
+    }
+
+    footer p {
+        margin: 5px;
+    }
+
+    @media (max-width: 1100px) {
+        .navbar {
+            flex-wrap: wrap;
+        }
+
+        .nav-links {
+            order: 3;
+            width: 100%;
+        }
+
+        .tools-grid,
+        .additional-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 650px) {
+        .navbar {
+            padding: 12px;
+            gap: 10px;
+        }
+
+        .brand h1 {
+            font-size: 23px;
+        }
+
+        .brand-icon {
+            font-size: 34px;
+        }
+
+        .location {
+            display: none;
+        }
+
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 3px;
+        }
+
+        .nav-links a {
+            padding: 9px 3px;
+            font-size: 11px;
+        }
+
+        .hero {
+            padding: 30px 20px;
+            min-height: auto;
+        }
+
+        .hero-message {
+            display: none;
+        }
+
+        .hero p {
+            font-size: 15px;
+        }
+
+        .benefits span {
+            font-size: 11px;
+        }
+
+        main {
+            padding: 22px 14px;
+        }
+
+        .tools-grid,
+        .additional-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .card {
+            padding: 12px;
+            min-height: 145px;
+        }
+
+        .card-heading {
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .card-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 20px;
+        }
+
+        .card h3 {
+            font-size: 13px;
+        }
+
+        .card p {
+            font-size: 12px;
+        }
+
+        .section-title h2 {
+            font-size: 20px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .tools-grid,
+        .additional-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+</head><body><header class="navbar">
+    <a href="/" class="brand">
+        <span class="brand-icon">🌿</span>
+        <div>
+            <h1>HarvestAI</h1>
+            <p>AI Farming Assistant</p>
+        </div>
+    </a><nav class="nav-links">
+    <a href="/">🏠<br>Home</a>
+    <a href="/weather">🌦️<br>Weather</a>
+    <a href="/crop-recommendation">🌱<br>Crop Rec</a>
+    <a href="/crop-disease">🍃<br>Leaf Doctor</a>
+    <a href="/pest-doctor">🐛<br>Pest Doctor</a>
+    <a href="/soil-doctor">🧪<br>Soil Doctor</a>
+    <a href="/market-prices">📈<br>Market Prices</a>
+    <a href="/chatbot">💬<br>Chatbot</a>
+    <a href="/crop-calendar">📅<br>Calendar</a>
+    <a href="#additional">▦<br>More</a>
+</nav>
+
+<div class="location">📍 Vijayawada, Andhra Pradesh</div>
+<a class="login" href="#additional">♙ Login</a>
+
+</header><section class="hero">
+    <div class="hero-content">
+        <h2>🌿 HarvestAI</h2>
+        <h3>Your Smart Farming Partner</h3>
+        <p>AI-powered solutions for healthier crops, higher yields<br>
+        and a better tomorrow.</p>    <div class="benefits">
+        <span>🌱 Better Crop Health</span>
+        <span>📈 Higher Productivity</span>
+        <span>₹ Increased Profit</span>
+        <span>🍃 Sustainable Farming</span>
+    </div>
+</div>
+
+<div class="hero-message">
+    Healthy Crops<br>
+    Happy Farmers<br>
+    Prosperous India 🌾
+</div>
+
+</section><main>
+    <section>
+        <div class="section-title">
+            <span class="emoji">🌿</span>
+            <div>
+                <h2>AI Farming Tools</h2>
+                <p>Get instant help with advanced AI and real-time data.</p>
+            </div>
+        </div>    <div class="tools-grid">
+        <a href="/weather" class="card blue">
+            <div class="card-heading">
+                <span class="card-icon">🌤️</span>
+                <h3>Weather</h3>
+            </div>
+            <p>Get real-time weather updates, forecast and alerts for your location.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/weather" class="card teal">
+            <div class="card-heading">
+                <span class="card-icon">📍</span>
+                <h3>Location Weather</h3>
+            </div>
+            <p>Check weather and rainfall details for your district.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/crop-recommendation" class="card green">
+            <div class="card-heading">
+                <span class="card-icon">🌱</span>
+                <h3>Crop Recommendation</h3>
+            </div>
+            <p>Find suitable crops for your soil, season and district.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/crop-disease" class="card mint">
+            <div class="card-heading">
+                <span class="card-icon">🍃</span>
+                <h3>Leaf Doctor</h3>
+            </div>
+            <p>Identify crop diseases from leaf photos and get guidance.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/pest-doctor" class="card yellow">
+            <div class="card-heading">
+                <span class="card-icon">🐛</span>
+                <h3>Pest Identification</h3>
+            </div>
+            <p>Learn about crop pests and possible control methods.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/soil-doctor" class="card brown">
+            <div class="card-heading">
+                <span class="card-icon">🪴</span>
+                <h3>Soil Doctor</h3>
+            </div>
+            <p>Explore soil types and suitable crop suggestions.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/market-prices" class="card red">
+            <div class="card-heading">
+                <span class="card-icon">📈</span>
+                <h3>Market Prices</h3>
+            </div>
+            <p>Find crop price information from available market data.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/chatbot" class="card purple">
+            <div class="card-heading">
+                <span class="card-icon">🤖</span>
+                <h3>AI Farming Chatbot</h3>
+            </div>
+            <p>Ask farming questions in Telugu or English.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/crop-calendar" class="card violet">
+            <div class="card-heading">
+                <span class="card-icon">📅</span>
+                <h3>Crop Calendar</h3>
+            </div>
+            <p>Learn crop growing stages and seasonal activities.</p>
+            <span class="card-arrow">→</span>
+        </a>
+    </div>
+</section>
+
+<section class="additional" id="additional">
+    <div class="section-title">
+        <span class="emoji">⭐</span>
+        <div>
+            <h2>Additional Features</h2>
+            <p>More tools for smart and profitable farming.</p>
+        </div>
+    </div>
+
+    <div class="additional-grid">
+        <a href="/voice-assistant" class="card pink">
+            <div class="card-heading">
+                <span class="card-icon">🎙️</span>
+                <h3>Telugu Voice Assistant</h3>
+            </div>
+            <p>Listen to farming tips and guidance in Telugu.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/profit-calculator" class="card blue">
+            <div class="card-heading">
+                <span class="card-icon">💰</span>
+                <h3>Expense & Profit Tracker</h3>
+            </div>
+            <p>Calculate farming expenses, income and profit.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/government-schemes" class="card green">
+            <div class="card-heading">
+                <span class="card-icon">🏛️</span>
+                <h3>Government Schemes & News</h3>
+            </div>
+            <p>Explore farmer schemes and official updates.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/farming-videos" class="card orange">
+            <div class="card-heading">
+                <span class="card-icon">🎬</span>
+                <h3>Farming Videos</h3>
+            </div>
+            <p>Discover useful farming techniques and crop care.</p>
+            <span class="card-arrow">→</span>
+        </a>
+
+        <a href="/crop-recommendation" class="card teal">
+            <div class="card-heading">
+                <span class="card-icon">📍</span>
+                <h3>Farmer Location & District</h3>
+            </div>
+            <p>Choose your district for locally relevant guidance.</p>
+            <span class="card-arrow">→</span>
+        </a>
+    </div>
+</section>
+
+</main><footer>
+    <p>HarvestAI - AI Farming Assistant</p>
+    <p>Made with ❤️ for Farmers | 🌿 Grow More • Live Better</p>
+</footer></body>
+              </html>
