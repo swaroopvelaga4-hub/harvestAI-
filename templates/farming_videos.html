@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Farming Videos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 18px;
+            font-family: Arial, sans-serif;
+            background: #f1f8f1;
+            color: #26352a;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 15px auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #087f35, #16a05a);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            border-radius: 18px;
+        }
+
+        .header .icon {
+            font-size: 48px;
+        }
+
+        .header h1 {
+            margin: 12px 0;
+        }
+
+        .header p {
+            line-height: 1.6;
+        }
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 14px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd8cd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .video-icon {
+            min-height: 140px;
+            background: #e3f5e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .video-content {
+            padding: 18px;
+        }
+
+        .video-content h3 {
+            color: #087f35;
+            margin-top: 0;
+        }
+
+        .video-content p {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .video-link {
+            display: inline-block;
+            padding: 11px 14px;
+            background: #078c36;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .video-link:hover {
+            background: #056b29;
+        }
+
+        .notice {
+            margin-top: 24px;
+            padding: 15px;
+            background: #fff6dc;
+            border-left: 4px solid #e0a000;
+            border-radius: 8px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 25px 0 10px;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 24px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🎥🌾</div>
+        <h1>Farming Videos</h1>
+        <p>
+            Learn farming techniques, crop care and modern agriculture
+            through educational videos.
+        </p>
+    </div>
+
+    <div class="search-box">
+        <label for="category">Choose a Farming Topic</label>
+
+        <select id="category" onchange="filterVideos()">
+            <option value="all">All Farming Topics</option>
+            <option value="cultivation">Crop Cultivation</option>
+            <option value="disease">Crop Disease Prevention</option>
+            <option value="water">Water and Irrigation</option>
+            <option value="soil">Soil and Fertilizer</option>
+            <option value="modern">Modern Farming</option>
+        </select>
+    </div>
+
+    <div class="video-grid">
+
+        <div class="video-card" data-category="cultivation">
+            <div class="video-icon">🌾</div>
+            <div class="video-content">
+                <h3>Crop Cultivation</h3>
+                <p>
+                    Learn about crop selection, land preparation,
+                    sowing and basic crop management.
+                </p>
+                <a class="video-link"
+                   href="https://www.youtube.com/results?search_query=Indian+agriculture+crop+cultivation+Telugu"
+                   target="_blank" rel="noopener noreferrer">
+                    Watch Videos ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="video-card" data-category="disease">
+            <div class="video-icon">🍃</div>
+            <div class="video-content">
+                <h3>Crop Disease Prevention</h3>
+                <p>
+                    Learn how to identify common crop diseases
+                    and understand safe prevention practices.
+                </p>
+                <a class="video-link"
+                   href="https://www.youtube.com/results?search_query=crop+disease+identification+prevention+Telugu"
+                   target="_blank" rel="noopener noreferrer">
+                    Watch Videos ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="video-card" data-category="water">
+            <div class="video-icon">💧</div>
+            <div class="video-content">
+                <h3>Water and Irrigation</h3>
+                <p>
+                    Explore drip irrigation, sprinkler systems
+                    and water-saving methods for farms.
+                </p>
+                <a class="video-link"
+                   href="https://www.youtube.com/results?search_query=drip+irrigation+farming+Telugu"
+                   target="_blank" rel="noopener noreferrer">
+                    Watch Videos ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="video-card" data-category="soil">
+            <div class="video-icon">🌱</div>
+            <div class="video-content">
+                <h3>Soil and Fertilizer</h3>
+                <p>
+                    Understand soil testing, soil health
+                    and responsible fertilizer management.
+                </p>
+                <a class="video-link"
+                   href="https://www.youtube.com/results?search_query=soil+testing+fertilizer+management+Telugu"
+                   target="_blank" rel="noopener noreferrer">
+                    Watch Videos ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="video-card" data-category="modern">
+            <div class="video-icon">🚜</div>
+            <div class="video-content">
+                <h3>Modern Farming Methods</h3>
+                <p>
+                    Discover farm mechanization, smart farming
+                    and modern agricultural techniques.
+                </p>
+                <a class="video-link"
+                   href="https://www.youtube.com/results?search_query=modern+farming+technology+India+Telugu"
+                   target="_blank" rel="noopener noreferrer">
+                    Watch Videos ↗
+                </a>
+            </div>
+        </div>
+
+        <div class="video-card" data-category="cultivation">
+            <div class="video-icon">🌶️</div>
+            <div class="video-content">
+                <h3>Chilli and Paddy Farming</h3>
+                <p>
+                    Find educational videos about chilli and paddy
+                    cultivation, crop care and harvesting.
+                </p>
+                <a class="video-link"
+                   href="https://www.youtube.com/results?search_query=chilli+paddy+cultivation+Telugu"
+                   target="_blank" rel="noopener noreferrer">
+                    Watch Videos ↗
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="notice">
+        <strong>Important:</strong>
+        These buttons open YouTube search results. The videos are not
+        hosted by HarvestAI, and their accuracy is not independently
+        verified. Follow recommendations from qualified agricultural
+        experts for crop-specific decisions.
+    </div>
+
+    <a class="back-link" href="{{ url_for('home') }}">
+        ← Back to HarvestAI Home
+    </a>
+
+</div>
+
+<script>
+    function filterVideos() {
+        const selectedCategory =
+            document.getElementById("category").value;
+
+        const cards = document.querySelectorAll(".video-card");
+
+        cards.forEach(function(card) {
+            const cardCategory = card.dataset.category;
+
+            if (
+                selectedCategory === "all" ||
+                selectedCategory === cardCategory
+            ) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
