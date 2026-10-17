@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Profit Calculator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #243328;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header .icon {
+            font-size: 48px;
+        }
+
+        h1 {
+            color: #078c36;
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd8cd;
+            border-radius: 9px;
+            font-size: 16px;
+            background: #fff;
+        }
+
+        input:focus,
+        select:focus {
+            outline: 2px solid #078c36;
+            border-color: #078c36;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 24px;
+            background: #078c36;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #056b29;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #eaf8ed;
+            border-left: 5px solid #078c36;
+            border-radius: 10px;
+        }
+
+        .result h2 {
+            color: #078c36;
+            margin-top: 0;
+        }
+
+        .result p {
+            padding: 9px 0;
+            margin: 0;
+            border-bottom: 1px solid #d2e8d6;
+            line-height: 1.5;
+        }
+
+        .result p:last-child {
+            border-bottom: none;
+        }
+
+        .profit {
+            color: #087b32;
+            font-weight: bold;
+        }
+
+        .loss {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .error {
+            margin-top: 18px;
+            padding: 12px;
+            background: #ffebee;
+            color: #b71c1c;
+            border-radius: 8px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .note {
+            margin-top: 20px;
+            padding: 12px;
+            background: #fff8e1;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 18px;
+                margin: 10px auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🌾💰</div>
+        <h1>Farm Profit Calculator</h1>
+        <p class="subtitle">
+            Calculate your farming income, expenses and estimated profit or loss.
+        </p>
+    </div>
+
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form action="{{ url_for('profit_calculator') }}" method="POST">
+
+        <label for="crop">Crop Name</label>
+        <select id="crop" name="crop" required>
+            <option value="">Select your crop</option>
+            <option value="Rice">Rice / Paddy</option>
+            <option value="Cotton">Cotton</option>
+            <option value="Chilli">Chilli</option>
+            <option value="Maize">Maize</option>
+            <option value="Groundnut">Groundnut</option>
+            <option value="Mango">Mango</option>
+            <option value="Sugarcane">Sugarcane</option>
+            <option value="Turmeric">Turmeric</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label for="area">Cultivated Area (Acres)</label>
+        <input
+            type="number"
+            id="area"
+            name="area"
+            min="0.01"
+            step="0.01"
+            placeholder="Example: 2"
+            required
+        >
+
+        <label for="investment">Total Farming Expenses (₹)</label>
+        <input
+            type="number"
+            id="investment"
+            name="investment"
+            min="0"
+            step="0.01"
+            placeholder="Seeds, fertilizer, labour, etc."
+            required
+        >
+
+        <label for="yield_amount">Total Harvest Yield (Quintals)</label>
+        <input
+            type="number"
+            id="yield_amount"
+            name="yield_amount"
+            min="0"
+            step="0.01"
+            placeholder="Example: 30"
+            required
+        >
+
+        <label for="sale_price">Selling Price per Quintal (₹)</label>
+        <input
+            type="number"
+            id="sale_price"
+            name="sale_price"
+            min="0"
+            step="0.01"
+            placeholder="Example: 2500"
+            required
+        >
+
+        <button type="submit">Calculate Profit / Loss</button>
+
+    </form>
+
+    {% if revenue is defined and total_cost is defined and profit is defined %}
+
+        <div class="result">
+            <h2>📊 Your Farming Report</h2>
+
+            <p>
+                <strong>Crop:</strong>
+                {{ crop }}
+            </p>
+
+            <p>
+                <strong>Cultivated Area:</strong>
+                {{ area }} acres
+            </p>
+
+            <p>
+                <strong>Total Harvest:</strong>
+                {{ yield_amount }} quintals
+            </p>
+
+            <p>
+                <strong>Total Income:</strong>
+                ₹{{ "%.2f"|format(revenue|float) }}
+            </p>
+
+            <p>
+                <strong>Total Expenses:</strong>
+                ₹{{ "%.2f"|format(total_cost|float) }}
+            </p>
+
+            <p>
+                <strong>Profit / Loss:</strong>
+                <span class="{{ 'profit' if profit|float >= 0 else 'loss' }}">
+                    ₹{{ "%.2f"|format(profit|float) }}
+                    {% if profit|float >= 0 %}
+                        (Profit)
+                    {% else %}
+                        (Loss)
+                    {% endif %}
+                </span>
+            </p>
+        </div>
+
+    {% endif %}
+
+    <div class="note">
+        <strong>Note:</strong>
+        Enter your actual farming expenses and selling price for a useful estimate.
+        This calculator does not fetch live crop prices.
+    </div>
+
+    <a class="back-link" href="{{ url_for('home') }}">
+        ← Back to HarvestAI Home
+    </a>
+
+</div>
+
+</body>
+</html>
