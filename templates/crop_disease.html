@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarvestAI - Crop Disease Doctor</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #173b26;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 20px auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #087f3c, #0caf50);
+            color: white;
+            padding: 24px 16px;
+            border-radius: 18px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+        }
+
+        .header p {
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-top: 18px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px #0000000d;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 16px 0 8px;
+        }
+
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #b9d8c2;
+            border-radius: 9px;
+            background: white;
+            font-size: 15px;
+        }
+
+        .preview {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            margin-top: 12px;
+            border-radius: 12px;
+            display: none;
+            background: #f5f5f5;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #078c36;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+        }
+
+        .result {
+            border-left: 5px solid #078c36;
+        }
+
+        .result h2 {
+            color: #078c36;
+            margin-top: 0;
+        }
+
+        .result-item {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 9px;
+            background: #f2f9f3;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .warning {
+            background: #fff7df;
+            border-left: 4px solid #e0a000;
+            padding: 12px;
+            border-radius: 8px;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+            color: #087f3c;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 13px;
+            color: #56705e;
+            padding: 15px 0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <header class="header">
+        <h1>🌿 Crop Disease Doctor</h1>
+        <p>AI Farming Assistant - HarvestAI</p>
+        <p>Upload a leaf photo to check for possible crop diseases.</p>
+    </header>
+
+    <section class="card">
+        <h2>🔍 Check Your Crop</h2>
+
+        <form action="{{ url_for('predict') }}"
+              method="POST"
+              enctype="multipart/form-data">
+
+            <label for="crop">Select Crop</label>
+            <select name="crop" id="crop" required>
+                <option value="">-- Select Crop --</option>
+                <option value="Rice">Rice / వరి</option>
+                <option value="Mango">Mango / మామిడి</option>
+                <option value="Cotton">Cotton / పత్తి</option>
+                <option value="Chilli">Chilli / మిరప</option>
+                <option value="Tomato">Tomato / టమాటా</option>
+                <option value="Groundnut">Groundnut / వేరుశనగ</option>
+                <option value="Maize">Maize / మొక్కజొన్న</option>
+                <option value="Other">Other Crop</option>
+            </select>
+
+            <label for="image">Upload Leaf Photo</label>
+            <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                capture="environment"
+                required
+            >
+
+            <img id="preview" class="preview" alt="Selected leaf preview">
+
+            <button type="submit" id="submitBtn">
+                🔬 Detect Crop Disease
+            </button>
+        </form>
+    </section>
+
+    {% if disease or crop_name or treatment or fertilizer or prevention %}
+    <section class="card result" aria-live="polite">
+        <h2>📋 Analysis Result</h2>
+
+        {% if crop_name %}
+        <div class="result-item">
+            <strong>Crop:</strong> {{ crop_name }}
+        </div>
+        {% elif crop %}
+        <div class="result-item">
+            <strong>Selected Crop:</strong> {{ crop }}
+        </div>
+        {% endif %}
+
+        {% if disease %}
+        <div class="result-item">
+            <strong>Possible Disease:</strong> {{ disease }}
+        </div>
+        {% endif %}
+
+        {% if confidence is defined and confidence is not none %}
+        <div class="result-item">
+            <strong>Model Confidence:</strong> {{ confidence }}
+        </div>
+        {% endif %}
+
+        {% if treatment %}
+        <div class="result-item">
+            <strong>Suggested Treatment:</strong><br>
+            {{ treatment }}
+        </div>
+        {% endif %}
+
+        {% if fertilizer %}
+        <div class="result-item">
+            <strong>Fertilizer Advice:</strong><br>
+            {{ fertilizer }}
+        </div>
+        {% endif %}
+
+        {% if recommended_quantity %}
+        <div class="result-item">
+            <strong>Recommended Quantity:</strong><br>
+            {{ recommended_quantity }}
+        </div>
+        {% endif %}
+
+        {% if prevention %}
+        <div class="result-item">
+            <strong>Prevention:</strong><br>
+            {{ prevention }}
+        </div>
+        {% endif %}
+
+        <div class="warning">
+            ⚠️ <strong>Important:</strong>
+            AI results are preliminary and may be incorrect.
+            Confirm the disease with a local agricultural officer
+            before applying pesticides or changing fertilizer doses.
+        </div>
+    </section>
+    {% endif %}
+
+    {% if error %}
+    <section class="card warning" role="alert">
+        <strong>⚠️ Analysis Message</strong><br>
+        {{ error }}
+    </section>
+    {% endif %}
+
+    <a class="back" href="{{ url_for('index') }}">← Back to Home</a>
+
+    <footer>
+        HarvestAI 🌱 | Smart Farming Support
+    </footer>
+</div>
+
+<script>
+    const imageInput = document.getElementById("image");
+    const preview = document.getElementById("preview");
+    const form = document.querySelector("form");
+    const submitBtn = document.getElementById("submitBtn");
+
+    let previewUrl = null;
+
+    imageInput.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
+        }
+
+        if (!file) {
+            preview.style.display = "none";
+            preview.removeAttribute("src");
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            alert("Please select a valid image file.");
+            this.value = "";
+            preview.style.display = "none";
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert("Photo size must be less than 10 MB.");
+            this.value = "";
+            preview.style.display = "none";
+            return;
+        }
+
+        previewUrl = URL.createObjectURL(file);
+        preview.src = previewUrl;
+        preview.style.display = "block";
+    });
+
+    form.addEventListener("submit", function (event) {
+        if (!imageInput.files.length) {
+            event.preventDefault();
+            alert("Please upload a leaf photo.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "⏳ Analyzing Photo...";
+    });
+</script>
+
+</body>
+</html>
