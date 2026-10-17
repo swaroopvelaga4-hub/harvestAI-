@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Pest Identification</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #183b24;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 20px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .icon {
+            font-size: 55px;
+        }
+
+        h1 {
+            color: #078c36;
+            font-size: 27px;
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            color: #607567;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: bold;
+        }
+
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #c8ddcd;
+            border-radius: 10px;
+            background: #fff;
+            font-size: 15px;
+        }
+
+        input[type="file"] {
+            background: #f8fcf8;
+        }
+
+        .preview-box {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        #preview {
+            display: none;
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            border: 1px solid #d5e6d8;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #078c36;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #056b29;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 12px;
+            background: #effaf0;
+            border: 1px solid #c8e8ce;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .result h2 {
+            color: #078c36;
+            margin-top: 0;
+            font-size: 21px;
+        }
+
+        .message {
+            margin-top: 18px;
+            padding: 12px;
+            background: #fff8e6;
+            border-left: 4px solid #e4ad24;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .back {
+            display: block;
+            margin-top: 22px;
+            text-align: center;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #718176;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 8px auto;
+                padding: 19px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🐛</div>
+        <h1>AI Pest Doctor</h1>
+        <p class="subtitle">
+            Upload a photo of the pest or affected plant and select your crop.
+            HarvestAI can display the result returned by the connected backend.
+        </p>
+    </div>
+
+    <form
+        action="{{ url_for('pest_identify') }}"
+        method="POST"
+        enctype="multipart/form-data"
+        id="pestForm"
+    >
+
+        <label for="crop">🌾 Select Crop</label>
+
+        <select id="crop" name="crop" required>
+            <option value="">-- Choose Crop --</option>
+
+            <option value="Rice">Rice / Paddy</option>
+            <option value="Cotton">Cotton</option>
+            <option value="Chilli">Chilli</option>
+            <option value="Tomato">Tomato</option>
+            <option value="Maize">Maize</option>
+            <option value="Groundnut">Groundnut</option>
+            <option value="Mango">Mango</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label for="pest_image">📸 Upload Pest Photo</label>
+
+        <input
+            type="file"
+            id="pest_image"
+            name="pest_image"
+            accept="image/png,image/jpeg,image/webp"
+            required
+        >
+
+        <div class="preview-box">
+            <img id="preview" alt="Selected pest photo preview">
+        </div>
+
+        <p class="subtitle">
+            Supported formats: JPG, JPEG, PNG, WEBP. Maximum size: 10 MB.
+            Choose a clear photo with the pest or affected plant visible.
+        </p>
+
+        <button type="submit" id="submitButton">
+            🔍 Identify Pest
+        </button>
+
+    </form>
+
+    {% if error %}
+    <div class="result">
+        <h2>⚠️ Unable to Process</h2>
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if message %}
+    <div class="result">
+        <h2>🌿 Analysis Status</h2>
+        <p>{{ message }}</p>
+    </div>
+    {% endif %}
+
+    {% if pest_name %}
+    <div class="result">
+        <h2>🔎 Identification Result</h2>
+
+        <p><strong>Crop:</strong> {{ crop_name or request.form.get('crop', 'Not specified') }}</p>
+
+        <p><strong>Pest:</strong> {{ pest_name }}</p>
+
+        {% if confidence is defined and confidence is not none %}
+        <p><strong>Confidence:</strong> {{ confidence }}%</p>
+        {% endif %}
+
+        {% if treatment %}
+        <p><strong>Suggested Treatment:</strong> {{ treatment }}</p>
+        {% endif %}
+
+        {% if prevention %}
+        <p><strong>Prevention:</strong> {{ prevention }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="message">
+        <strong>Farmer Safety Note:</strong>
+        This page does not guarantee pest identification unless a compatible
+        AI model is connected. Confirm the pest with a local agricultural
+        officer before using pesticides. Always follow the product label
+        and local agricultural guidance.
+    </div>
+
+    <a class="back" href="{{ url_for('home') }}">
+        ← Back to Home
+    </a>
+
+    <footer>
+        HarvestAI — Smart Farming Assistant 🌱
+    </footer>
+
+</div>
+
+<script>
+    const imageInput = document.getElementById("pest_image");
+    const preview = document.getElementById("preview");
+    const form = document.getElementById("pestForm");
+    const submitButton = document.getElementById("submitButton");
+
+    imageInput.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (!file) {
+            preview.style.display = "none";
+            preview.removeAttribute("src");
+            return;
+        }
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            alert("Please select a JPG, PNG, or WEBP image.");
+            this.value = "";
+            preview.style.display = "none";
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert("Image size must be 10 MB or less.");
+            this.value = "";
+            preview.style.display = "none";
+            return;
+        }
+
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "inline-block";
+    });
+
+    form.addEventListener("submit", function (event) {
+        const file = imageInput.files[0];
+        const crop = document.getElementById("crop").value;
+
+        if (!crop || !file) {
+            event.preventDefault();
+            alert("Please select a crop and upload a pest photo.");
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            event.preventDefault();
+            alert("Image size must be 10 MB or less.");
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Processing...";
+    });
+</script>
+
+</body>
+</html>
