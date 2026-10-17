@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Farming Chatbot</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #183b24;
+        }
+
+        .header {
+            background: #078c36;
+            color: white;
+            padding: 22px 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 25px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 20px auto;
+            padding: 15px;
+        }
+
+        .chat-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .bot-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 17px;
+            border-bottom: 1px solid #e4eee5;
+        }
+
+        .bot-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #e0f5e4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 27px;
+        }
+
+        .bot-info h2 {
+            margin: 0 0 5px;
+            color: #078c36;
+            font-size: 18px;
+        }
+
+        .online {
+            margin: 0;
+            color: #52805c;
+            font-size: 12px;
+        }
+
+        .chat-messages {
+            height: 380px;
+            overflow-y: auto;
+            padding: 18px;
+            background: #fbfdfb;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            max-width: 85%;
+            padding: 12px 14px;
+            border-radius: 13px;
+            font-size: 14px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .bot .bubble {
+            background: #e7f5e9;
+            border-bottom-left-radius: 3px;
+        }
+
+        .user .bubble {
+            background: #078c36;
+            color: white;
+            border-bottom-right-radius: 3px;
+        }
+
+        .quick-questions {
+            padding: 15px;
+            border-top: 1px solid #e4eee5;
+        }
+
+        .quick-questions p {
+            margin: 0 0 10px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .quick-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-buttons button {
+            padding: 9px 12px;
+            border: 1px solid #b9ddc1;
+            border-radius: 20px;
+            background: white;
+            color: #087a30;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .quick-buttons button:hover {
+            background: #e7f5e9;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 9px;
+            padding: 15px;
+            border-top: 1px solid #e4eee5;
+        }
+
+        #userInput {
+            flex: 1;
+            min-width: 0;
+            padding: 13px;
+            border: 1px solid #c8ddcd;
+            border-radius: 10px;
+            font-size: 15px;
+            outline-color: #078c36;
+        }
+
+        #sendButton {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #078c36;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #sendButton:disabled {
+            opacity: 0.6;
+        }
+
+        .notice {
+            margin-top: 15px;
+            padding: 13px;
+            background: #fff8e6;
+            border-left: 4px solid #e4ad24;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin: 22px 0;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            color: #718176;
+            font-size: 12px;
+            padding-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .container {
+                margin: 8px auto;
+                padding: 10px;
+            }
+
+            .chat-messages {
+                height: 350px;
+            }
+
+            .bubble {
+                max-width: 92%;
+            }
+
+            #sendButton {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <h1>🌾 HarvestAI Chatbot</h1>
+    <p>Your Farming Assistant — రైతులకు వ్యవసాయ సహాయకుడు</p>
+</header>
+
+<div class="container">
+
+    <div class="chat-card">
+
+        <div class="bot-info">
+            <div class="bot-icon">🤖</div>
+
+            <div>
+                <h2>HarvestAI Assistant</h2>
+                <p class="online">🌱 Farming information assistant</p>
+            </div>
+        </div>
+
+        <div
+            class="chat-messages"
+            id="chatMessages"
+            aria-live="polite"
+        >
+            <div class="message bot">
+                <div class="bubble">నమస్కారం రైతు మిత్రమా! 🌱
+
+నేను HarvestAI Farming Assistant.
+
+మీరు పంటలు, తెగుళ్లు, వాతావరణం గురించి ప్రశ్నలు అడగవచ్చు.
+
+Hello! You can ask me about crops, pests, soil and farming.
+
+మీ ప్రశ్నను కింద టైప్ చేయండి.</div>
+            </div>
+        </div>
+
+        <div class="quick-questions">
+            <p>💡 Quick Questions / త్వరిత ప్రశ్నలు</p>
+
+            <div class="quick-buttons">
+                <button type="button" data-question="Rice crop tips">
+                    🌾 Rice Tips
+                </button>
+
+                <button type="button" data-question="Pest control">
+                    🐛 Pest Control
+                </button>
+
+                <button type="button" data-question="Soil health">
+                    🪴 Soil Health
+                </button>
+
+                <button type="button" data-question="Weather advice">
+                    🌦️ Weather
+                </button>
+
+                <button type="button" data-question="Crop disease">
+                    🍃 Crop Disease
+                </button>
+            </div>
+        </div>
+
+        <form class="input-area" id="chatForm">
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Ask your farming question..."
+                autocomplete="off"
+                maxlength="500"
+                required
+            >
+
+            <button type="submit" id="sendButton">
+                Send ➤
+            </button>
+        </form>
+
+    </div>
+
+    <div class="notice">
+        <strong>Important:</strong>
+        This version provides basic predefined guidance only.
+        It is not yet connected to a live AI service. For pesticide
+        selection, fertilizer quantities, or serious crop disease,
+        consult a qualified local agricultural officer.
+    </div>
+
+    <a class="back" href="{{ url_for('home') }}">
+        ← Back to Home
+    </a>
+
+    <footer>
+        HarvestAI — Smart Farming Assistant 🌱
+    </footer>
+
+</div>
+
+<script>
+    const chatForm = document.getElementById("chatForm");
+    const userInput = document.getElementById("userInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const sendButton = document.getElementById("sendButton");
+
+    function addMessage(text, sender) {
+        const message = document.createElement("div");
+        message.className = "message " + sender;
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        // Treat messages as plain text for safety.
+        bubble.textContent = text;
+
+        message.appendChild(bubble);
+        chatMessages.appendChild(message);
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getReply(question) {
+        const q = question.toLowerCase();
+
+        if (
+            q.includes("rice") ||
+            q.includes("paddy") ||
+            q.includes("వరి") ||
+            q.includes("వరి పంట")
+        ) {
+            return "🌾 Rice / వరి పంట\n\n" +
+                "• Use healthy, suitable seeds.\n" +
+                "• Maintain appropriate water management.\n" +
+                "• Monitor the crop regularly for pests and disease.\n\n" +
+                "వరి పంటకు మీ ప్రాంతం, సీజన్, నీటి లభ్యతను బట్టి సాగు పద్ధతులు మారుతాయి.";
+        }
+
+        if (
+            q.includes("pest") ||
+            q.includes("insect") ||
+            q.includes("పురుగు") ||
+            q.includes("తెగులు")
+        ) {
+            return "🐛 Pest Management / పురుగు నివారణ\n\n" +
+                "• Observe the affected leaves and stems carefully.\n" +
+                "• Take a clear photo and identify the pest before treatment.\n" +
+                "• Use only locally approved treatments according to the product label.\n\n" +
+                "పురుగు ఫోటో, పంట పేరు, కనిపిస్తున్న లక్షణాలు ఇస్తే మరింత నిర్దిష్టమైన సమాచారం కోసం సహాయం చేయగలను.";
+        }
+
+        if (
+            q.includes("soil") ||
+            q.includes("మట్టి") ||
+            q.includes("నేల")
+        ) {
+            return "🪴 Soil Health / నేల ఆరోగ్యం\n\n" +
+                "• Get a soil test to check pH and nutrients.\n" +
+                "• Follow the test recommendations for fertilizer.\n" +
+                "• Consider soil type, drainage and irrigation before choosing a crop.\n\n" +
+                "నేల ఫోటో మాత్రమే చూసి పోషకాలు లేదా pH ఖచ్చితంగా చెప్పలేం.";
+        }
+
+        if (
+            q.includes("weather") ||
+            q.includes("rain") ||
+            q.includes("వాతావరణం") ||
+            q.includes("వర్షం")
+        ) {
+            return "🌦️ Weather Advice / వాతావరణ సూచనలు\n\n" +
+                "• Check your local forecast before irrigation or spraying.\n" +
+                "• Avoid spraying when conditions are unsuitable or strong winds are expected.\n" +
+                "• Follow official local weather warnings.\n\n" +
+                "మీ ప్రాంతానికి సంబంధించిన తాజా సమాచారం కోసం HarvestAI Weather page చూడండి.";
+        }
+
+        if (
+            q.includes("disease") ||
+            q.includes("leaf") ||
+            q.includes("ఆకు") ||
+            q.includes("ఆకులు")
+        ) {
+            return "🍃 Crop Disease / పంట వ్యాధులు\n\n" +
+                "• Check whether spots, yellowing or wilting are spreading.\n" +
+                "• Take clear photos of both sides of the affected leaf.\n" +
+                "• Avoid applying chemicals before confirming the cause.\n\n" +
+                "పంట పేరు, మొక్క లక్షణాలు, సమస్య మొదలైన సమయం చెబితే తదుపరి చర్యలపై మార్గదర్శనం ఇవ్వగలను.";
+        }
+
+        if (
+            q.includes("fertilizer") ||
+            q.includes("ఎరువు")
+        ) {
+            return "🌱 Fertilizer Guidance / ఎరువుల సమాచారం\n\n" +
+                "The correct fertilizer depends on the
