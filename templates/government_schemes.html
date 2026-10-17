@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Government Schemes</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 18px;
+            font-family: Arial, sans-serif;
+            background: #f1f8f1;
+            color: #26352a;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 15px auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #087f35, #16a05a);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            border-radius: 18px;
+        }
+
+        .header .icon {
+            font-size: 48px;
+        }
+
+        .header h1 {
+            margin: 12px 0;
+        }
+
+        .header p {
+            line-height: 1.6;
+        }
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            margin: 20px 0;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd8cd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+
+        .search-button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: #078c36;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .search-button:hover {
+            background: #056b29;
+        }
+
+        .section-title {
+            color: #087f35;
+            margin: 25px 0 15px;
+        }
+
+        .scheme-card {
+            background: white;
+            padding: 22px;
+            margin-bottom: 16px;
+            border-radius: 14px;
+            border-left: 5px solid #078c36;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+        }
+
+        .scheme-card h3 {
+            color: #087f35;
+            margin-top: 0;
+        }
+
+        .scheme-card p {
+            line-height: 1.7;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #e3f5e8;
+            color: #087f35;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .scheme-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: #078c36;
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .scheme-link:hover {
+            background: #056b29;
+        }
+
+        .notice {
+            background: #fff6dc;
+            border-left: 4px solid #e0a000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 22px;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 25px 0 10px;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .empty-message {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 24px 15px;
+            }
+
+            .scheme-card {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🇮🇳🌾</div>
+        <h1>Farmer Government Schemes</h1>
+        <p>
+            Explore government schemes that may help farmers with financial
+            support, crop insurance and agricultural development.
+        </p>
+    </div>
+
+    <div class="search-box">
+        <form method="GET" action="{{ url_for('government_schemes') }}">
+
+            <label for="state">Select Your State</label>
+
+            <select id="state" name="state">
+                <option value="Andhra Pradesh"
+                    {% if state == "Andhra Pradesh" %}selected{% endif %}>
+                    Andhra Pradesh
+                </option>
+
+                <option value="Telangana"
+                    {% if state == "Telangana" %}selected{% endif %}>
+                    Telangana
+                </option>
+
+                <option value="Other"
+                    {% if state == "Other" %}selected{% endif %}>
+                    Other State
+                </option>
+            </select>
+
+            <label for="category">Scheme Category</label>
+
+            <select id="category" name="category">
+                <option value="all"
+                    {% if category == "all" %}selected{% endif %}>
+                    All Schemes
+                </option>
+
+                <option value="financial"
+                    {% if category == "financial" %}selected{% endif %}>
+                    Financial Assistance
+                </option>
+
+                <option value="insurance"
+                    {% if category == "insurance" %}selected{% endif %}>
+                    Crop Insurance
+                </option>
+
+                <option value="soil"
+                    {% if category == "soil" %}selected{% endif %}>
+                    Soil and Farming
+                </option>
+            </select>
+
+            <button class="search-button" type="submit">
+                Find Schemes
+            </button>
+
+        </form>
+    </div>
+
+    <h2 class="section-title">🌱 Available Scheme Information</h2>
+
+    {% if schemes %}
+
+        {% for scheme in schemes %}
+            <div class="scheme-card">
+
+                <span class="badge">
+                    {{ scheme.category|default('Farmer Scheme') }}
+                </span>
+
+                <h3>{{ scheme.name }}</h3>
+
+                <p>
+                    <strong>Details:</strong>
+                    {{ scheme.description }}
+                </p>
+
+                {% if scheme.eligibility %}
+                    <p>
+                        <strong>Eligibility:</strong>
+                        {{ scheme.eligibility }}
+                    </p>
+                {% endif %}
+
+                {% if scheme.benefit %}
+                    <p>
+                        <strong>Possible Benefit:</strong>
+                        {{ scheme.benefit }}
+                    </p>
+                {% endif %}
+
+                {% if scheme.url %}
+                    <a class="scheme-link"
+                       href="{{ scheme.url }}"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        Official Website ↗
+                    </a>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-message">
+            <p>
+                No scheme information is available for the selected filters.
+                Please try another category.
+            </p>
+        </div>
+
+    {% endif %}
+
+    <div class="notice">
+        <strong>⚠️ Important:</strong>
+        Scheme eligibility, benefits, application dates and rules may change.
+        Always verify the latest information on the official government website
+        before applying. Never pay unofficial agents or share OTPs.
+    </div>
+
+    <a class="back-link" href="{{ url_for('home') }}">
+        ← Back to HarvestAI Home
+    </a>
+
+</div>
+
+</body>
+</html>
