@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Crop Recommendation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #183b24;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .icon {
+            font-size: 55px;
+        }
+
+        h1 {
+            color: #078c36;
+            font-size: 27px;
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            color: #607567;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #c8ddcd;
+            border-radius: 10px;
+            background: #fff;
+            font-size: 16px;
+            outline-color: #078c36;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+            background: #078c36;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #056b29;
+        }
+
+        .results {
+            margin-top: 25px;
+            padding: 20px;
+            background: #effaf0;
+            border: 1px solid #c8e8ce;
+            border-radius: 12px;
+        }
+
+        .results h2 {
+            color: #078c36;
+            font-size: 21px;
+            margin-top: 0;
+        }
+
+        .crop-list {
+            padding-left: 22px;
+        }
+
+        .crop-list li {
+            margin: 12px 0;
+            font-size: 16px;
+        }
+
+        .notice {
+            margin-top: 18px;
+            padding: 12px;
+            background: #fff8e6;
+            border-left: 4px solid #e4ad24;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .back {
+            display: block;
+            margin-top: 22px;
+            text-align: center;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            color: #718176;
+            font-size: 12px;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 20px;
+                margin: 10px auto;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">🌾</div>
+        <h1>AI Crop Recommendation</h1>
+        <p class="subtitle">
+            Select your soil type and growing season to get
+            crop suggestions from HarvestAI.
+        </p>
+    </div>
+
+    <form action="{{ url_for('crop_recommendation') }}" method="POST">
+
+        <label for="soil">🌱 Select Soil Type</label>
+
+        <select id="soil" name="soil" required>
+            <option value="">-- Choose Soil Type --</option>
+
+            <option value="black"
+                {% if request.form.get('soil') == 'black' %}selected{% endif %}>
+                Black Soil
+            </option>
+
+            <option value="red"
+                {% if request.form.get('soil') == 'red' %}selected{% endif %}>
+                Red Soil
+            </option>
+
+            <option value="sandy"
+                {% if request.form.get('soil') == 'sandy' %}selected{% endif %}>
+                Sandy Soil
+            </option>
+
+            <option value="loamy"
+                {% if request.form.get('soil') == 'loamy' %}selected{% endif %}>
+                Loamy Soil
+            </option>
+
+            <option value="alluvial"
+                {% if request.form.get('soil') == 'alluvial' %}selected{% endif %}>
+                Alluvial Soil
+            </option>
+
+            <option value="clay"
+                {% if request.form.get('soil') == 'clay' %}selected{% endif %}>
+                Clay Soil
+            </option>
+        </select>
+
+        <label for="season">🌦️ Select Growing Season</label>
+
+        <select id="season" name="season" required>
+            <option value="">-- Choose Season --</option>
+
+            <option value="kharif"
+                {% if request.form.get('season') == 'kharif' %}selected{% endif %}>
+                Kharif (Monsoon)
+            </option>
+
+            <option value="winter"
+                {% if request.form.get('season') == 'winter' %}selected{% endif %}>
+                Winter
+            </option>
+
+            <option value="summer"
+                {% if request.form.get('season') == 'summer' %}selected{% endif %}>
+                Summer
+            </option>
+        </select>
+
+        <button type="submit">🌿 Recommend Crops</button>
+
+    </form>
+
+    {% if recommendations is not none %}
+
+    <div class="results">
+        <h2>✅ Suggested Crops</h2>
+
+        {% if recommendations %}
+            <ul class="crop-list">
+                {% for crop in recommendations %}
+                    <li>{{ crop }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No crop suggestions available for these selections.</p>
+        {% endif %}
+
+        <div class="notice">
+            <strong>Important:</strong>
+            These are general suggestions, not guaranteed results.
+            Crop suitability also depends on rainfall, irrigation,
+            soil test results and local conditions. Consult your
+            local agricultural officer before planting.
+        </div>
+    </div>
+
+    {% endif %}
+
+    <a class="back" href="{{ url_for('home') }}">
+        ← Back to Home
+    </a>
+
+    <footer>
+        HarvestAI — Smart Farming Assistant 🌱
+    </footer>
+
+</div>
+
+</body>
+</html>
