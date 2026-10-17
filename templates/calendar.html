@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HarvestAI - Crop Calendar</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            color: #183b24;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 20px auto;
+            padding: 24px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .icon {
+            font-size: 55px;
+        }
+
+        h1 {
+            color: #078c36;
+            font-size: 27px;
+            margin: 10px 0;
+        }
+
+        .subtitle {
+            color: #607567;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: bold;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #c8ddcd;
+            border-radius: 10px;
+            background: white;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #078c36;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #056b29;
+        }
+
+        .result {
+            margin-top: 25px;
+        }
+
+        .result h2 {
+            color: #078c36;
+            font-size: 22px;
+        }
+
+        .stage {
+            position: relative;
+            margin: 14px 0;
+            padding: 16px;
+            background: #effaf0;
+            border-left: 5px solid #078c36;
+            border-radius: 8px;
+        }
+
+        .stage h3 {
+            margin: 0 0 8px;
+            color: #087a30;
+            font-size: 17px;
+        }
+
+        .stage p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .badge {
+            display: inline-block;
+            margin-bottom: 8px;
+            padding: 5px 9px;
+            border-radius: 20px;
+            background: #d9f2df;
+            color: #087a30;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .notice {
+            margin-top: 22px;
+            padding: 14px;
+            background: #fff8e6;
+            border-left: 4px solid #e4ad24;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .back {
+            display: block;
+            margin-top: 24px;
+            text-align: center;
+            color: #078c36;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #718176;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 8px auto;
+                padding: 18px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div class="icon">📅</div>
+        <h1>Crop Calendar</h1>
+        <p class="subtitle">
+            Plan your farming activities with a simple crop-growing calendar.
+            పంట సాగు దశలను తెలుసుకోండి.
+        </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('crop_calendar') }}">
+
+        <label for="crop">🌾 Select Crop</label>
+
+        <select id="crop" name="crop" required>
+            <option value="">-- Choose Crop --</option>
+
+            {% set crops = [
+                'Rice', 'Maize', 'Cotton', 'Groundnut',
+                'Chilli', 'Tomato', 'Mango',
+                'Red Gram', 'Green Gram', 'Sugarcane'
+            ] %}
+
+            {% for item in crops %}
+            <option value="{{ item }}"
+                {% if request.form.get('crop') == item %}selected{% endif %}>
+                {{ item }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="season">🌦️ Select Season</label>
+
+        <select id="season" name="season" required>
+            <option value="">-- Choose Season --</option>
+
+            <option value="kharif"
+                {% if request.form.get('season') == 'kharif' %}selected{% endif %}>
+                Kharif / Monsoon
+            </option>
+
+            <option value="rabi"
+                {% if request.form.get('season') == 'rabi' %}selected{% endif %}>
+                Rabi / Winter
+            </option>
+
+            <option value="summer"
+                {% if request.form.get('season') == 'summer' %}selected{% endif %}>
+                Summer
+            </option>
+        </select>
+
+        <label for="district">📍 District (Optional)</label>
+
+        <input
+            type="text"
+            id="district"
+            name="district"
+            placeholder="Example: East Godavari"
+            value="{{ request.form.get('district', '') }}"
+        >
+
+        <button type="submit">📅 View Crop Calendar</button>
+
+    </form>
+
+    {% if calendar %}
+    <div class="result">
+
+        <h2>🌱 Your Crop Calendar</h2>
+
+        {% if calendar is string %}
+            <div class="stage">
+                {{ calendar }}
+            </div>
+        {% else %}
+            {% for item in calendar %}
+            <div class="stage">
+
+                {% if item.stage %}
+                    <h3>{{ item.stage }}</h3>
+                {% endif %}
+
+                {% if item.period %}
+                    <span class="badge">{{ item.period }}</span>
+                {% endif %}
+
+                {% if item.activity %}
+                    <p>{{ item.activity }}</p>
+                {% endif %}
+
+                {% if item.description %}
+                    <p>{{ item.description }}</p>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    {% if message %}
+    <div class="result">
+        <h2>ℹ️ Farming Information</h2>
+        <div class="stage">{{ message }}</div>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="result">
+        <h2>⚠️ Information</h2>
+        <div class="stage">{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <div class="notice">
+        <strong>Important:</strong>
+        Planting and harvesting dates depend on local rainfall,
+        irrigation, variety and district. This page displays information
+        supplied by the backend; confirm the recommended schedule with
+        your local agricultural officer.
+    </div>
+
+    <a class="back" href="{{ url_for('home') }}">
+        ← Back to Home
+    </a>
+
+    <footer>
+        HarvestAI — Smart Farming Assistant 🌱
+    </footer>
+
+</div>
+
+</body>
+</html>
