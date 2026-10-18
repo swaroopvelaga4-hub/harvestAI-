@@ -16,6 +16,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
 
+DATA_GOV_IN_API_KEY = os.environ.get("DATA_GOV_IN_API_KEY")
+
+MARKET_API_URL = (
+    "https://api.data.gov.in/resource/"
+    "9ef84268-d588-465a-a308-a864a43d0070"
+)
+
 DISEASE_MODEL = (
     "https://router.huggingface.co/hf-inference/models/"
     "linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification"
@@ -29,16 +36,15 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 def allowed_file(filename):
     return (
         "." in filename
-        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+        and filename.rsplit(".", 1)[1].lower()
+        in ALLOWED_EXTENSIONS
     )
 
 
 def classify_disease(image_path):
     if not HF_TOKEN:
-        return None, (
-            "AI service is not configured. "
-            "Please add HF_TOKEN in Render Environment."
-        )
+        app.logger.error("HF_TOKEN missing in Render Environment.")
+        return None, "AI service is not configured. Add HF_TOKEN in Render."
 
     try:
         with open(image_path, "rb") as image_file:
@@ -49,32 +55,74 @@ def classify_disease(image_path):
                     "Content-Type": "application/octet-stream"
                 },
                 data=image_file,
-                timeout=60
+                timeout=90
             )
 
         if response.status_code != 200:
+            app.logger.error(
+                "Disease API HTTP %s: %s",
+                response.status_code,
+                response.text[:1000]
+            )
+
+            if response.status_code in (401, 403):
+                return None, (
+                    "AI authentication failed. Check your HF_TOKEN."
+                )
+
+            if response.status_code == 429:
+                return None, (
+                    "AI request limit reached. Try again later."
+                )
+
+            if response.status_code in (500, 502, 503, 504):
+                return None, (
+                    "AI model is temporarily unavailable. "
+                    "Please try again later."
+                )
+
             return None, (
-                "AI service is temporarily unavailable. "
-                "Please try again later."
+                f"AI service error: HTTP {response.status_code}. "
+                "Check Render Logs."
             )
 
         results = response.json()
 
         if not isinstance(results, list) or not results:
-            return None, "AI could not identify the image."
+            app.logger.error(
+                "Unexpected disease model response: %s",
+                str(results)[:1000]
+            )
+            return None, "AI could not identify this image."
+
+        valid_results = [
+            item for item in results
+            if isinstance(item, dict)
+            and item.get("label")
+            and isinstance(item.get("score"), (int, float))
+        ]
+
+        if not valid_results:
+            return None, "AI returned no valid predictions."
 
         results = sorted(
-            results,
-            key=lambda item: item.get("score", 0),
+            valid_results,
+            key=lambda item: item["score"],
             reverse=True
         )
 
         return results[0], None
 
+    except requests.Timeout:
+        app.logger.exception("Disease API timed out.")
+        return None, "AI service took too long. Please try again."
+
     except requests.RequestException:
+        app.logger.exception("Disease API connection failed.")
         return None, "Could not connect to the AI service."
 
     except (ValueError, OSError):
+        app.logger.exception("Disease image processing failed.")
         return None, "Could not process the uploaded image."
 
 
@@ -84,39 +132,39 @@ def disease_advice(label):
     if "healthy" in text:
         return {
             "treatment": (
-                "The model predicts a healthy leaf. "
-                "Continue regular crop monitoring."
+                "The AI predicts a healthy leaf. "
+                "Continue monitoring the crop."
             ),
             "fertilizer": (
-                "Use fertilizer according to soil testing "
-                "and the crop's growth stage."
+                "Choose fertilizer according to soil testing "
+                "and crop requirements."
             ),
             "quantity": (
-                "A fertilizer quantity cannot be recommended "
-                "from this image alone."
+                "A fertilizer quantity cannot be determined "
+                "from the image alone."
             ),
             "prevention": (
-                "Use healthy planting material, maintain field hygiene, "
-                "and inspect leaves regularly."
+                "Use healthy planting material and inspect "
+                "the crop regularly."
             )
         }
 
     return {
         "treatment": (
             "This is an AI prediction, not a confirmed diagnosis. "
-            "Check symptoms with a local agricultural officer "
-            "before selecting a treatment."
+            "Verify the symptoms with a local agricultural officer "
+            "before applying pesticides or other treatments."
         ),
         "fertilizer": (
-            "Choose fertilizer according to the crop, soil test, "
+            "Select fertilizer according to the crop, soil test "
             "and confirmed diagnosis."
         ),
         "quantity": (
             "A safe quantity cannot be determined from the image alone."
         ),
         "prevention": (
-            "Monitor the crop, maintain field hygiene, and seek "
-            "local agricultural advice."
+            "Maintain field hygiene, monitor the crop regularly "
+            "and seek local agricultural advice."
         )
     }
 
@@ -150,7 +198,7 @@ def api_weather():
                 "count": 1,
                 "language": "en"
             },
-            timeout=10
+            timeout=15
         )
         geo_response.raise_for_status()
 
@@ -174,7 +222,7 @@ def api_weather():
                 "timezone": "auto",
                 "forecast_days": 1
             },
-            timeout=10
+            timeout=15
         )
         weather_response.raise_for_status()
 
@@ -198,8 +246,9 @@ def api_weather():
         })
 
     except requests.RequestException:
+        app.logger.exception("Weather API failed.")
         return jsonify({
-            "error": "Weather service is temporarily unavailable"
+            "error": "Weather service is temporarily unavailable."
         }), 503
 
 
@@ -219,18 +268,18 @@ def crop_recommendation():
             "sandy": ["Groundnut", "Millets"],
             "loamy": ["Maize", "Pulses"],
             "alluvial": ["Rice", "Maize", "Pulses"],
-            "clay": ["Rice (where water is suitable)", "Pulses"]
+            "clay": ["Rice", "Pulses"]
         }
 
         recommendations = crop_data.get(
             soil,
-            ["Please consult a local agricultural officer"]
+            ["Consult a local agricultural officer."]
         )
 
         if season == "winter":
             recommendations = [
                 crop for crop in recommendations
-                if crop != "Rice (where water is suitable)"
+                if crop != "Rice"
             ]
 
     return render_template(
@@ -259,21 +308,19 @@ def crop_calendar():
         district = request.form.get("district", "").strip()
 
         if not crop or not season or not district:
-            message = "Please enter the crop, season and district."
+            message = "Please enter crop, season and district."
         else:
             calendar = [
                 {
                     "stage": "Land preparation",
                     "details": (
-                        "Prepare the field and check soil condition "
-                        "before planting."
+                        "Prepare the field and check soil condition."
                     )
                 },
                 {
                     "stage": "Sowing or planting",
                     "details": (
-                        "Use suitable seeds and follow local "
-                        "agricultural recommendations."
+                        "Use suitable seeds and follow local advice."
                     )
                 },
                 {
@@ -285,15 +332,14 @@ def crop_calendar():
                 {
                     "stage": "Harvest",
                     "details": (
-                        "Harvest when the crop reaches the appropriate "
-                        "maturity stage."
+                        "Harvest at the appropriate maturity stage."
                     )
                 }
             ]
 
             message = (
                 f"General calendar for {crop} in {district}, "
-                f"season: {season}. This is not a date-specific forecast."
+                f"season: {season}. Confirm dates locally."
             )
 
     return render_template(
@@ -307,15 +353,78 @@ def crop_calendar():
 
 @app.route("/market-prices", methods=["GET", "POST"])
 def market_prices():
-    error = (
-        "Live market prices are not connected yet. "
-        "Please check an official agricultural market source."
-    )
+    prices = None
+    error = None
+
+    crop = request.values.get("crop", "").strip()
+    state = request.values.get("state", "").strip()
+    district = request.values.get("district", "").strip()
+
+    if request.method == "POST":
+        if not DATA_GOV_IN_API_KEY:
+            error = (
+                "Market API key is not configured. "
+                "Add DATA_GOV_IN_API_KEY in Render Environment."
+            )
+        else:
+            try:
+                params = {
+                    "api-key": DATA_GOV_IN_API_KEY,
+                    "format": "json",
+                    "limit": 100
+                }
+
+                if crop:
+                    params["filters[commodity]"] = crop
+
+                if state:
+                    params["filters[state]"] = state
+
+                if district:
+                    params["filters[district]"] = district
+
+                response = requests.get(
+                    MARKET_API_URL,
+                    params=params,
+                    timeout=25
+                )
+
+                if response.status_code != 200:
+                    app.logger.error(
+                        "Market API HTTP %s: %s",
+                        response.status_code,
+                        response.text[:1000]
+                    )
+                    error = (
+                        "Government market data is unavailable. "
+                        "Check the API key, dataset and Render Logs."
+                    )
+                else:
+                    data = response.json()
+                    records = data.get("records", [])
+
+                    if records:
+                        prices = records
+                    else:
+                        error = (
+                            "No market prices found for these filters. "
+                            "Try another crop, state or district."
+                        )
+
+            except (requests.RequestException, ValueError):
+                app.logger.exception("Market API request failed.")
+                error = (
+                    "Could not connect to the market data service. "
+                    "Please try again later."
+                )
 
     return render_template(
         "market_prices.html",
+        prices=prices,
         error=error,
-        prices=None
+        crop=crop,
+        state=state,
+        district=district
     )
 
 
@@ -334,13 +443,15 @@ def predict():
     if not uploaded_file or not uploaded_file.filename:
         return render_template(
             "crop_disease.html",
-            error="Please upload a leaf photo."
+            error="Please upload a leaf photo.",
+            crop=crop
         )
 
     if not allowed_file(uploaded_file.filename):
         return render_template(
             "crop_disease.html",
-            error="Upload a JPG, JPEG, PNG, or WEBP image."
+            error="Upload JPG, JPEG, PNG or WEBP.",
+            crop=crop
         )
 
     filename = secure_filename(uploaded_file.filename)
@@ -348,11 +459,12 @@ def predict():
     if not filename:
         return render_template(
             "crop_disease.html",
-            error="Invalid filename. Please select another image."
+            error="Invalid filename. Select another image."
         )
 
-    # Use a unique filename to avoid collisions between uploads.
-    filename = f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{filename}"
+    filename = (
+        f"{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{filename}"
+    )
     image_path = os.path.join(UPLOAD_FOLDER, filename)
 
     try:
@@ -384,9 +496,11 @@ def predict():
         )
 
     except OSError:
+        app.logger.exception("Could not save uploaded leaf image.")
         return render_template(
             "crop_disease.html",
-            error="Could not save the image. Please try again."
+            error="Could not save the image. Please try again.",
+            crop=crop
         )
 
 
@@ -410,14 +524,13 @@ def pest_identify():
     if not allowed_file(uploaded_file.filename):
         return render_template(
             "pest_doctor.html",
-            error="Please upload a JPG, JPEG, PNG, or WEBP image."
+            error="Upload JPG, JPEG, PNG or WEBP."
         )
 
     return render_template(
         "pest_doctor.html",
         error=(
-            "The photo was uploaded, but AI pest detection is not "
-            "connected yet. Please consult an agricultural officer."
+            "Photo uploaded, but AI pest detection is not connected yet."
         )
     )
 
@@ -453,7 +566,7 @@ def profit_calculator():
             sale_price = float(request.form.get("sale_price", 0))
 
             if not crop:
-                raise ValueError("Please select a crop.")
+                raise ValueError
 
             if (
                 area <= 0
@@ -461,11 +574,10 @@ def profit_calculator():
                 or yield_amount < 0
                 or sale_price < 0
             ):
-                raise ValueError("Please enter valid non-negative values.")
+                raise ValueError
 
             revenue = yield_amount * sale_price
-            total_cost = investment
-            profit = revenue - total_cost
+            profit = revenue - investment
 
             return render_template(
                 "profit_calculator.html",
@@ -473,17 +585,14 @@ def profit_calculator():
                 area=area,
                 yield_amount=yield_amount,
                 revenue=revenue,
-                total_cost=total_cost,
+                total_cost=investment,
                 profit=profit
             )
 
         except (ValueError, TypeError):
             return render_template(
                 "profit_calculator.html",
-                error=(
-                    "Enter a crop, a positive cultivated area, "
-                    "and valid non-negative expense, yield and price values."
-                )
+                error="Please enter valid crop and numeric values."
             )
 
     return render_template("profit_calculator.html")
@@ -507,55 +616,40 @@ def voice_assistant():
 
 @app.route("/government-schemes", methods=["GET", "POST"])
 def government_schemes():
-    state = request.values.get("state", "Andhra Pradesh").strip()
-    category = request.values.get("category", "all").strip().lower()
+    state = request.values.get(
+        "state", "Andhra Pradesh"
+    ).strip()
+
+    category = request.values.get(
+        "category", "all"
+    ).strip().lower()
 
     all_schemes = [
         {
             "name": "PM-KISAN",
             "category": "financial",
             "description": (
-                "A central government income-support scheme for "
-                "eligible landholding farmer families, subject to rules."
+                "Income support for eligible farmer families "
+                "under the scheme rules."
             ),
-            "eligibility": (
-                "Eligibility and exclusions are determined by official "
-                "scheme guidelines."
-            ),
-            "benefit": (
-                "Financial assistance under the current scheme rules."
-            ),
+            "eligibility": "Check the current official eligibility rules.",
+            "benefit": "Financial assistance under scheme guidelines.",
             "url": "https://pmkisan.gov.in/"
         },
         {
             "name": "Pradhan Mantri Fasal Bima Yojana",
             "category": "insurance",
-            "description": (
-                "Crop insurance support for eligible notified crops "
-                "and areas, subject to enrolment and scheme rules."
-            ),
-            "eligibility": (
-                "Check current season, crop, area and enrolment rules."
-            ),
-            "benefit": (
-                "Insurance protection against covered crop losses."
-            ),
+            "description": "Crop insurance for eligible notified crops.",
+            "eligibility": "Check current season and enrolment rules.",
+            "benefit": "Insurance protection against covered crop losses.",
             "url": "https://pmfby.gov.in/"
         },
         {
             "name": "Soil Health Card",
             "category": "soil",
-            "description": (
-                "Helps farmers understand soil nutrient status and "
-                "receive soil-management recommendations."
-            ),
-            "eligibility": (
-                "Contact the local agriculture department for available "
-                "soil testing services."
-            ),
-            "benefit": (
-                "Soil test information to support fertilizer decisions."
-            ),
+            "description": "Soil nutrient testing and management guidance.",
+            "eligibility": "Contact your local agriculture department.",
+            "benefit": "Soil information for fertilizer decisions.",
             "url": "https://soilhealth.dac.gov.in/"
         }
     ]
@@ -564,8 +658,8 @@ def government_schemes():
         schemes = all_schemes
     else:
         schemes = [
-            scheme for scheme in all_schemes
-            if scheme["category"] == category
+            item for item in all_schemes
+            if item["category"] == category
         ]
 
     return render_template(
@@ -588,38 +682,4 @@ def farming_videos():
 @app.route("/health")
 def health():
     return jsonify({
-        "app": "HarvestAI",
-        "status": "running",
-        "time": datetime.now().isoformat()
-    })
-
-
-# ---------------- FILE SIZE ERROR ----------------
-
-@app.errorhandler(413)
-def file_too_large(error):
-    return (
-        "Photo is too large. Please upload an image under 10 MB.",
-        413
-    )
-
-
-# ---------------- GENERAL ERROR HANDLER ----------------
-
-@app.errorhandler(500)
-def internal_server_error(error):
-    app.logger.exception("Internal server error")
-    return (
-        "Something went wrong on the server. Please try again later.",
-        500
-    )
-
-
-# ---------------- RUN APPLICATION ----------------
-
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
-        debug=False
-                    )
+   
