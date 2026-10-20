@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarvestAI - Voice Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f8f0;
+            text-align: center;
+            padding: 25px;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px #0001;
+        }
+        h1 { color: #078c36; }
+        button {
+            background: #078c36;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 13px 20px;
+            margin: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #result {
+            margin: 20px 0;
+            min-height: 45px;
+            overflow-wrap: anywhere;
+        }
+        a { color: #078c36; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🎙️ HarvestAI Voice Assistant</h1>
+        <p>Ask your farming questions using your voice.</p>    <button onclick="startListening()">🎤 Speak</button>
+    <button onclick="speakAnswer()">🔊 Read Answer</button>
+
+    <p id="result">Tap Speak to start.</p>
+    <a href="/">← Back to Home</a>
+</div>
+
+<script>
+    const result = document.getElementById("result");
+
+    function startListening() {
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            result.textContent =
+                "Voice recognition is not supported in this browser. Try Chrome.";
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = "te-IN";
+        recognition.interimResults = false;
+        recognition.onresult = function(event) {
+            result.textContent =
+                event.results[0][0].transcript;
+        };
+        recognition.onerror = function() {
+            result.textContent =
+                "Voice recognition failed. Please try again.";
+        };
+        recognition.start();
+    }
+
+    function speakAnswer() {
+        if (!("speechSynthesis" in window)) {
+            result.textContent = "Speech output is not supported.";
+            return;
+        }
+
+        const text = result.textContent;
+        if (!text || text === "Tap Speak to start.") return;
+
+        const speech = new SpeechSynthesisUtterance(text);
+        speech.lang = "te-IN";
+        window.speechSynthesis.speak(speech);
+    }
+</script>
+
+</body>
+</html>
