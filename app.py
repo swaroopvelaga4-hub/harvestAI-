@@ -682,4 +682,7 @@ def farming_videos():
 @app.route("/health")
 def health():
     return jsonify({
+                "status": "success",
+        "message": "HarvestAI is running successfully"
+    })
    
