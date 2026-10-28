@@ -1,341 +1,539 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HarvestAI - Live Mandi Rates</title>
 
-    <title>HarvestAI - Market Prices</title>
+<style>
+*{box-sizing:border-box}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+:root{
+    --green:#075b31;
+    --bright:#35db75;
+    --yellow:#ffe45c;
+    --black:#07120e;
+    --white:#f6fff8;
+}
 
-        body {
-            margin: 0;
-            padding: 16px;
-            font-family: Arial, sans-serif;
-            background: #f0f8f0;
-            color: #183b24;
-        }
+body{
+    margin:0;
+    padding:12px;
+    font-family:Arial,sans-serif;
+    background:#07120e;
+    color:var(--white);
+}
 
-        .container {
-            max-width: 700px;
-            margin: 20px auto;
-            padding: 25px;
-            background: white;
-            border-radius: 18px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        }
+.container{
+    max-width:1050px;
+    margin:0 auto;
+}
 
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
+.header{
+    text-align:center;
+    padding:20px 10px;
+    border:2px solid #1a693d;
+    border-radius:15px;
+    background:linear-gradient(135deg,#07120e,#103c25);
+}
 
-        .icon {
-            font-size: 55px;
-        }
+.logo{
+    font-size:44px;
+}
 
-        h1 {
-            color: #078c36;
-            font-size: 27px;
-            margin: 10px 0;
-        }
+h1{
+    color:var(--yellow);
+    font-size:clamp(25px,5vw,43px);
+    margin:8px 0;
+    text-shadow:1px 2px 3px #000;
+}
 
-        .subtitle {
-            color: #607567;
-            font-size: 14px;
-            line-height: 1.7;
-        }
+.subtitle{
+    color:#c4f6d4;
+    line-height:1.7;
+    font-size:14px;
+}
 
-        label {
-            display: block;
-            margin: 18px 0 8px;
-            font-weight: bold;
-        }
+.date-box{
+    display:inline-block;
+    margin-top:10px;
+    padding:10px 16px;
+    border:1px solid var(--yellow);
+    border-radius:8px;
+    color:var(--yellow);
+    font-weight:bold;
+}
 
-        input,
-        select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #c8ddcd;
-            border-radius: 10px;
-            background: white;
-            font-size: 15px;
-        }
+.filters{
+    margin:15px 0;
+    padding:18px;
+    border:1px solid #28764b;
+    border-radius:13px;
+    background:#10271b;
+}
 
-        button {
-            width: 100%;
-            margin-top: 24px;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            background: #078c36;
-            color: white;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+.filters h2{
+    color:var(--bright);
+    margin-top:0;
+    font-size:21px;
+}
 
-        button:hover {
-            background: #056b29;
-        }
+label{
+    display:block;
+    margin:13px 0 6px;
+    font-weight:bold;
+    color:#d9ffe4;
+}
 
-        .result {
-            margin-top: 25px;
-            padding: 18px;
-            background: #effaf0;
-            border: 1px solid #c8e8ce;
-            border-radius: 12px;
-            line-height: 1.7;
-            overflow-wrap: anywhere;
-        }
+input,select{
+    width:100%;
+    padding:12px;
+    border:1px solid #4b805e;
+    border-radius:8px;
+    background:#f8fff9;
+    color:#173522;
+    font-size:15px;
+}
 
-        .result h2 {
-            margin-top: 0;
-            color: #078c36;
-            font-size: 21px;
-        }
+.filter-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
 
-        .price-card {
-            margin-top: 12px;
-            padding: 14px;
-            background: white;
-            border: 1px solid #d8e8db;
-            border-radius: 10px;
-        }
+button,.button-link{
+    display:block;
+    width:100%;
+    margin-top:16px;
+    padding:13px;
+    border:0;
+    border-radius:8px;
+    background:#168b45;
+    color:white;
+    font-weight:bold;
+    font-size:16px;
+    text-align:center;
+    text-decoration:none;
+    cursor:pointer;
+}
 
-        .price {
-            color: #078c36;
-            font-size: 22px;
-            font-weight: bold;
-        }
+button:hover,.button-link:hover{
+    background:#08642e;
+}
 
-        .notice {
-            margin-top: 18px;
-            padding: 13px;
-            background: #fff8e6;
-            border-left: 4px solid #e4ad24;
-            border-radius: 6px;
-            font-size: 13px;
-            line-height: 1.7;
-        }
+button:disabled{
+    opacity:.7;
+}
 
-        .back {
-            display: block;
-            margin-top: 22px;
-            text-align: center;
-            color: #078c36;
-            text-decoration: none;
-            font-weight: bold;
-        }
+.section-title{
+    margin:22px 0 12px;
+    padding:12px;
+    border:2px solid #248b4d;
+    border-radius:10px;
+    text-align:center;
+    color:var(--yellow);
+    font-size:22px;
+    background:#10291b;
+}
 
-        footer {
-            text-align: center;
-            margin-top: 25px;
-            color: #718176;
-            font-size: 12px;
-        }
+.rate-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+}
 
-        @media (max-width: 480px) {
-            .container {
-                margin: 8px auto;
-                padding: 19px;
-            }
+.rate-card{
+    min-width:0;
+    padding:13px;
+    border:1px solid #3a6247;
+    border-radius:10px;
+    background:linear-gradient(145deg,#12261a,#09140e);
+    box-shadow:0 3px 8px #0005;
+}
 
-            h1 {
-                font-size: 23px;
-            }
-        }
-    </style>
+.crop-name{
+    font-size:16px;
+    font-weight:bold;
+    color:#f3fff5;
+    overflow-wrap:anywhere;
+}
+
+.crop-icon{
+    font-size:27px;
+    margin-right:5px;
+}
+
+.rate{
+    margin:10px 0 4px;
+    color:var(--yellow);
+    font-size:clamp(19px,3vw,27px);
+    font-weight:bold;
+    overflow-wrap:anywhere;
+}
+
+.small-text{
+    font-size:12px;
+    color:#b8d9c2;
+    line-height:1.7;
+    overflow-wrap:anywhere;
+}
+
+.price-line{
+    margin-top:7px;
+    padding-top:7px;
+    border-top:1px solid #31523a;
+    font-size:13px;
+    line-height:1.7;
+    overflow-wrap:anywhere;
+}
+
+.badge{
+    display:inline-block;
+    padding:4px 7px;
+    border-radius:5px;
+    background:#17472a;
+    color:#a7ffc0;
+    font-size:11px;
+}
+
+.result,.notice{
+    margin-top:16px;
+    padding:15px;
+    border-radius:10px;
+    line-height:1.7;
+    overflow-wrap:anywhere;
+}
+
+.result{
+    background:#142b1c;
+    border:1px solid #4b8c5c;
+}
+
+.result h2{
+    color:var(--yellow);
+    margin-top:0;
+}
+
+.error{
+    color:#ffb9b9;
+}
+
+.notice{
+    background:#332b13;
+    border:1px solid #ad8b27;
+    color:#fff0b5;
+    font-size:13px;
+}
+
+.empty{
+    grid-column:1/-1;
+    padding:22px;
+    border:1px dashed #578267;
+    border-radius:10px;
+    text-align:center;
+    color:#d1e7d7;
+    line-height:1.8;
+}
+
+footer{
+    text-align:center;
+    padding:22px 5px;
+    color:#b6d3bd;
+    font-size:12px;
+}
+
+@media(min-width:750px){
+    .filter-grid{
+        grid-template-columns:repeat(4,minmax(0,1fr));
+    }
+    .rate-grid{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+}
+
+@media(max-width:360px){
+    body{padding:7px}
+    .rate-grid{grid-template-columns:1fr}
+    .filter-grid{grid-template-columns:1fr}
+    .filters{padding:12px}
+}
+</style>
 </head>
 
 <body>
-
 <div class="container">
 
-    <div class="header">
-        <div class="icon">💰</div>
-        <h1>Live Crop Market Prices</h1>
-        <p class="subtitle">
-            Select a crop and location to check market-price information
-            returned by HarvestAI.
-        </p>
+<header class="header">
+    <div class="logo">🌾🥬🌶️</div>
+    <h1>HarvestAI</h1>
+    <h2 style="margin:0;color:white">రైతు బజార్ రేట్లు</h2>
+    <p class="subtitle">
+        Daily Crop & Vegetable Market Prices<br>
+        ఆంధ్రప్రదేశ్ రైతుల కోసం మార్కెట్ ధరల సమాచారం
+    </p>
+    <div class="date-box">
+        📅 <span id="todayDate">Loading date...</span>
     </div>
+</header>
 
-    <form
-        action="{{ url_for('market_prices') }}"
-        method="POST"
-        id="marketForm"
-    >
+<section class="filters">
+    <h2>📍 Find Your Market Rates</h2>
 
-        <label for="crop">🌾 Select Crop</label>
+    <form action="{{ url_for('market_prices') }}"
+          method="POST"
+          id="marketForm">
 
-        <select id="crop" name="crop" required>
-            <option value="">-- Choose Crop --</option>
+        <div class="filter-grid">
 
-            {% set crops = [
-                'Paddy', 'Rice', 'Maize', 'Cotton',
-                'Chilli', 'Groundnut', 'Turmeric',
-                'Red Gram', 'Green Gram', 'Black Gram',
-                'Soybean', 'Sugarcane', 'Mango',
-                'Tomato', 'Onion', 'Potato'
-            ] %}
+            <div>
+                <label for="crop">🌾 Crop / Vegetable</label>
+                <select id="crop" name="crop" required>
+                    <option value="">All available crops</option>
+                    {% set crops = [
+                    'Paddy','Rice','Maize','Cotton','Chilli',
+                    'Groundnut','Turmeric','Red Gram','Green Gram',
+                    'Black Gram','Soybean','Sugarcane','Mango',
+                    'Tomato','Onion','Potato','Brinjal','Cabbage',
+                    'Cauliflower','Carrot','Okra','Bitter Gourd',
+                    'Bottle Gourd','Cucumber','Green Chilli',
+                    'Lemon','Garlic','Ginger'
+                    ] %}
+                    {% for item in crops %}
+                    <option value="{{ item }}"
+                    {% if request.form.get('crop') == item %}selected{% endif %}>
+                    {{ item }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-            {% for item in crops %}
-            <option value="{{ item }}"
-                {% if request.form.get('crop') == item %}selected{% endif %}>
-                {{ item }}
-            </option>
-            {% endfor %}
-        </select>
+            <div>
+                <label for="state">🗺️ State</label>
+                <select id="state" name="state" required>
+                    {% set states = [
+                    'Andhra Pradesh','Telangana','Tamil Nadu',
+                    'Karnataka','Kerala','Maharashtra','Odisha',
+                    'Chhattisgarh','Madhya Pradesh','Uttar Pradesh',
+                    'Gujarat','Rajasthan','Punjab','Haryana',
+                    'West Bengal','Bihar','Jharkhand','Assam'
+                    ] %}
+                    {% for item in states %}
+                    <option value="{{ item }}"
+                    {% if request.form.get('state','Andhra Pradesh') == item %}selected{% endif %}>
+                    {{ item }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <label for="state">📍 State</label>
+            <div>
+                <label for="district">🏡 District</label>
+                <select id="district" name="district" required>
+                    <option value="">Select district</option>
+                    {% set districts = [
+                    'All Districts','Alluri Sitharama Raju',
+                    'Anakapalli','Ananthapuramu','Annamayya',
+                    'Bapatla','Chittoor','Dr. B. R. Ambedkar Konaseema',
+                    'East Godavari','Eluru','Guntur','Kakinada',
+                    'Krishna','Kurnool','Nandyal','NTR',
+                    'Palnadu','Parvathipuram Manyam','Prakasam',
+                    'Sri Potti Sriramulu Nellore','Sri Sathya Sai',
+                    'Srikakulam','Tirupati','Visakhapatnam',
+                    'Vizianagaram','West Godavari',
+                    'YSR Kadapa','Rajamahendravaram'
+                    ] %}
+                    {% for item in districts %}
+                    <option value="{{ item }}"
+                    {% if request.form.get('district') == item %}selected{% endif %}>
+                    {{ item }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <select id="state" name="state" required>
-            <option value="">-- Choose State --</option>
+            <div>
+                <label for="market">🏪 Market / Mandi</label>
+                <input type="text" id="market" name="market"
+                       placeholder="Optional market name"
+                       value="{{ request.form.get('market','') }}">
+            </div>
 
-            {% set states = [
-                'Andhra Pradesh', 'Telangana', 'Tamil Nadu',
-                'Karnataka', 'Kerala', 'Maharashtra',
-                'Odisha', 'Chhattisgarh', 'Madhya Pradesh',
-                'Uttar Pradesh', 'Gujarat', 'Rajasthan',
-                'Punjab', 'Haryana', 'West Bengal',
-                'Bihar', 'Jharkhand', 'Assam'
-            ] %}
-
-            {% for item in states %}
-            <option value="{{ item }}"
-                {% if request.form.get('state') == item %}selected{% endif %}>
-                {{ item }}
-            </option>
-            {% endfor %}
-        </select>
-
-        <label for="district">🏡 District</label>
-
-        <input
-            type="text"
-            id="district"
-            name="district"
-            placeholder="Example: East Godavari"
-            value="{{ request.form.get('district', '') }}"
-            required
-        >
-
-        <label for="market">🏪 Market / Mandi (Optional)</label>
-
-        <input
-            type="text"
-            id="market"
-            name="market"
-            placeholder="Enter market name if known"
-            value="{{ request.form.get('market', '') }}"
-        >
+        </div>
 
         <button type="submit" id="searchButton">
-            🔍 Check Market Prices
+            🔍 Get Market Rates
         </button>
-
     </form>
 
-    {% if error %}
-    <div class="result">
-        <h2>⚠️ Unable to Get Prices</h2>
-        <p>{{ error }}</p>
-    </div>
-    {% endif %}
+    <a class="button-link"
+       href="{{ url_for('market_prices') }}">
+       🔄 Refresh / View All Rates
+    </a>
+</section>
 
-    {% if message %}
-    <div class="result">
-        <h2>📊 Market Price Information</h2>
-        <p>{{ message }}</p>
-    </div>
-    {% endif %}
+{% if error %}
+<section class="result error" role="alert">
+    <h2>⚠️ Market Data Unavailable</h2>
+    <p>{{ error }}</p>
+    <p>Please try again later or check whether the market-data API is configured.</p>
+</section>
+{% endif %}
+
+{% if message %}
+<section class="result">
+    <h2>📊 Market Information</h2>
+    <p>{{ message }}</p>
+</section>
+{% endif %}
+
+<section>
+    <h2 class="section-title">🥦 Daily Mandi Price Board</h2>
 
     {% if prices %}
-    <div class="result">
-        <h2>🌾 Market Price Results</h2>
+    <div class="rate-grid" id="rateGrid">
 
         {% for item in prices %}
-        <div class="price-card">
+        <article class="rate-card"
+                 data-crop="{{ item.crop|default('Crop',true)|lower }}">
 
-            {% if item.crop %}
-            <p><strong>Crop:</strong> {{ item.crop }}</p>
+            <div class="crop-name">
+                {% set crop_name = item.crop|default('Crop',true)|lower %}
+                {% if 'tomato' in crop_name %}🍅
+                {% elif 'onion' in crop_name %}🧅
+                {% elif 'potato' in crop_name %}🥔
+                {% elif 'chilli' in crop_name %}🌶️
+                {% elif 'cotton' in crop_name %}🌿
+                {% elif 'paddy' in crop_name or 'rice' in crop_name %}🌾
+                {% elif 'maize' in crop_name %}🌽
+                {% elif 'mango' in crop_name %}🥭
+                {% elif 'groundnut' in crop_name %}🥜
+                {% elif 'brinjal' in crop_name %}🍆
+                {% elif 'carrot' in crop_name %}🥕
+                {% elif 'lemon' in crop_name %}🍋
+                {% elif 'garlic' in crop_name %}🧄
+                {% else %}🥬
+                {% endif %}
+                {{ item.crop|default('Crop',true) }}
+            </div>
+
+            {% if item.modal_price is defined and item.modal_price not in [none,''] %}
+            <div class="rate">
+                ₹{{ item.modal_price }}
+            </div>
+            <div class="small-text">Modal / prevailing mandi price</div>
+            {% elif item.min_price is defined and item.min_price not in [none,''] %}
+            <div class="rate">
+                ₹{{ item.min_price }}
+            </div>
+            <div class="small-text">Minimum reported price</div>
+            {% else %}
+            <div class="rate">Price unavailable</div>
             {% endif %}
 
             {% if item.market %}
-            <p><strong>Market:</strong> {{ item.market }}</p>
+            <div class="price-line">
+                🏪 <strong>Market:</strong> {{ item.market }}
+            </div>
             {% endif %}
 
-            {% if item.min_price is defined %}
-            <p>
-                <strong>Minimum Price:</strong>
-                ₹{{ item.min_price }}
-            </p>
+            {% if item.district %}
+            <div class="price-line">
+                📍 <strong>District:</strong> {{ item.district }}
+            </div>
             {% endif %}
 
-            {% if item.max_price is defined %}
-            <p>
-                <strong>Maximum Price:</strong>
-                ₹{{ item.max_price }}
-            </p>
-            {% endif %}
+            <div class="price-line">
+                {% if item.min_price is defined and item.min_price not in [none,''] %}
+                <div>Minimum: ₹{{ item.min_price }}</div>
+                {% endif %}
 
-            {% if item.modal_price is defined %}
-            <p class="price">
-                Modal Price: ₹{{ item.modal_price }}
-            </p>
-            {% endif %}
+                {% if item.max_price is defined and item.max_price not in [none,''] %}
+                <div>Maximum: ₹{{ item.max_price }}</div>
+                {% endif %}
+            </div>
 
             {% if item.unit %}
-            <p><strong>Unit:</strong> {{ item.unit }}</p>
+            <p class="small-text">Unit: {{ item.unit }}</p>
+            {% else %}
+            <p class="small-text">Unit: As reported by the source</p>
             {% endif %}
 
             {% if item.date %}
-            <p><strong>Date:</strong> {{ item.date }}</p>
+            <p class="small-text">📅 Price date: {{ item.date }}</p>
             {% endif %}
 
-        </div>
+            <span class="badge">Market data result</span>
+        </article>
         {% endfor %}
+
+    </div>
+
+    {% else %}
+    <div class="empty">
+        <div style="font-size:38px">🌱 🥬 🌾</div>
+        <h3>No market rates loaded yet</h3>
+        <p>
+            Select your crop and location, then tap
+            <strong>Get Market Rates</strong>.
+        </p>
+        <p>
+            Rates will appear here when the backend successfully retrieves
+            matching records from a configured market-data source.
+        </p>
     </div>
     {% endif %}
+</section>
 
-    <div class="notice">
-        <strong>Important:</strong>
-        Current market prices are not displayed unless a verified
-        market-data source is connected to the backend.
-        Always confirm today's price, quality requirements and market
-        charges with the relevant mandi before selling your crop.
-        Prices may vary by crop quality and market.
-    </div>
+<div class="notice">
+    <strong>⚠️ Important price information</strong><br>
+    Prices shown here should come from the configured market-data source.
+    Government mandi prices are commonly wholesale prices and may be
+    reported per quintal rather than per kilogram.
+    Always check the displayed unit and price date before making a
+    selling decision. HarvestAI does not guarantee that every market
+    publishes a price every day.
+</div>
 
-    <a class="back" href="{{ url_for('home') }}">
-        ← Back to Home
-    </a>
+<a class="button-link" href="{{ url_for('home') }}">
+    ← Back to HarvestAI Home
+</a>
 
-    <footer>
-        HarvestAI — Smart Farming Assistant 🌱
-    </footer>
+<footer>
+    🌿 HarvestAI — Smart Farming Assistant<br>
+    Helping farmers make informed decisions
+</footer>
 
 </div>
 
 <script>
-    document.getElementById("marketForm").addEventListener("submit", function () {
+(function () {
+    const now = new Date();
+
+    document.getElementById("todayDate").textContent =
+        now.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+
+    const form = document.getElementById("marketForm");
+    const button = document.getElementById("searchButton");
+
+    form.addEventListener("submit", function (event) {
         const crop = document.getElementById("crop").value;
         const state = document.getElementById("state").value;
-        const district = document.getElementById("district").value.trim();
+        const district = document.getElementById("district").value;
 
         if (!crop || !state || !district) {
+            event.preventDefault();
             alert("Please select a crop, state and district.");
             return;
         }
 
-        const button = document.getElementById("searchButton");
         button.disabled = true;
-        button.textContent = "Searching...";
+        button.textContent = "⏳ Loading market rates...";
     });
+})();
 </script>
 
 </body>
